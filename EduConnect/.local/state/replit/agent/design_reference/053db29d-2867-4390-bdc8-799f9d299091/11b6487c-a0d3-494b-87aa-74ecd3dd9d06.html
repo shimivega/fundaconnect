@@ -1,0 +1,1043 @@
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FundaApp - South African Educational Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sa-blue': '#002395',
+                        'sa-green': '#00843D',
+                        'sa-gold': '#FFB612',
+                        'vibrant-blue': '#2563EB',
+                        'vibrant-orange': '#EA580C',
+                        'vibrant-green': '#16A34A',
+                        'soft-blue': '#DBEAFE',
+                        'soft-green': '#DCFCE7',
+                        'soft-gray': '#F1F5F9'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --secondary: #6B7280;
+            --accent: #10B981;
+            --background: #FFFFFF;
+            --surface: #F8FAFC;
+            --text: #111827;
+            --text-muted: #6B7280;
+        }
+
+        [data-theme="dark"] {
+            --primary: #60A5FA;
+            --secondary: #9CA3AF;
+            --accent: #34D399;
+            --background: #1E293B;
+            --surface: #334155;
+            --text: #F1F5F9;
+            --text-muted: #CBD5E1;
+        }
+
+        [data-theme="vibrant"] {
+            --primary: #2563EB;
+            --secondary: #7C3AED;
+            --accent: #EA580C;
+            --background: #FEFEFE;
+            --surface: #F0F9FF;
+            --text: #1E293B;
+            --text-muted: #64748B;
+        }
+
+        [data-theme="soft"] {
+            --primary: #3B82F6;
+            --secondary: #8B5CF6;
+            --accent: #10B981;
+            --background: #FEFEFE;
+            --surface: #F8FAFC;
+            --text: #374151;
+            --text-muted: #9CA3AF;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .floating-card {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-card:nth-child(even) {
+            animation-delay: -3s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .theme-transition {
+            transition: all 0.3s ease;
+        }
+
+        .chat-bubble-sent {
+            background: linear-gradient(135deg, var(--primary), #60A5FA);
+            color: white;
+        }
+
+        .chat-bubble-received {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+        }
+
+        .video-card {
+            background: var(--surface);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .video-card {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="theme-transition">
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 px-6 py-4 shadow-sm" style="background-color: var(--surface);">
+        <div class="flex items-center justify-between max-w-7xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <!-- 3D Logo placeholder -->
+                <div class="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center text-white font-bold text-xl floating-card">
+                    FA
+                </div>
+                <h1 class="text-2xl font-bold" style="color: var(--text);">FundaApp</h1>
+            </div>
+            
+            <!-- Theme Toggle -->
+            <div class="flex items-center space-x-4">
+                <select id="languageSelector" class="px-3 py-2 rounded-lg border theme-transition" style="background-color: var(--background); color: var(--text); border-color: var(--secondary);">
+                    <option value="en">English</option>
+                    <option value="zu">isiZulu</option>
+                    <option value="af">Afrikaans</option>
+                    <option value="st">Sesotho</option>
+                    <option value="xh">isiXhosa</option>
+                    <option value="tn">Setswana</option>
+                    <option value="nso">Sepedi</option>
+                    <option value="ss">siSwati</option>
+                    <option value="ve">Tshivenda</option>
+                    <option value="ts">Xitsonga</option>
+                </select>
+                <div class="flex space-x-2">
+                    <button onclick="setTheme('light')" class="w-8 h-8 rounded-full bg-white border-2 hover:scale-110 transition-transform" title="Light Theme"></button>
+                    <button onclick="setTheme('dark')" class="w-8 h-8 rounded-full bg-gray-900 border-2 hover:scale-110 transition-transform" title="Dark Theme"></button>
+                    <button onclick="setTheme('vibrant')" class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-orange-600 border-2 hover:scale-110 transition-transform" title="Vibrant Theme"></button>
+                    <button onclick="setTheme('soft')" class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-200 to-green-200 border-2 hover:scale-110 transition-transform" title="Soft Theme"></button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face" alt="User Profile" class="w-10 h-10 rounded-full">
+                    <span class="font-medium" style="color: var(--text);">Thabo M.</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Hero Section with 3D Dashboard -->
+        <section class="text-center mb-12">
+            <!-- Animated Logo Intro -->
+            <div class="mb-8">
+                <div class="w-32 h-32 mx-auto rounded-3xl gradient-bg flex items-center justify-center text-white text-4xl font-bold floating-card shadow-2xl">
+                    <!-- 3D Mascot placeholder -->
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+            </div>
+            
+            <h1 class="text-5xl font-bold mb-4" style="color: var(--text);">
+                Welcome to FundaApp
+            </h1>
+            <p class="text-xl mb-8" style="color: var(--text-muted);">
+                South Africa's premier digital learning platform for Grades 1-12, ABET, and teacher development
+            </p>
+
+            <!-- 3D Floating Dashboard Icons -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6 mb-12">
+                <!-- Practice Zone -->
+                <div class="floating-card hover-lift p-6 rounded-2xl shadow-lg cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-blue-500 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm" style="color: var(--text);">Practice Zone</h3>
+                </div>
+
+                <!-- Games Zone -->
+                <div class="floating-card hover-lift p-6 rounded-2xl shadow-lg cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-green-500 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm" style="color: var(--text);">Games Zone</h3>
+                </div>
+
+                <!-- Study Groups -->
+                <div class="floating-card hover-lift p-6 rounded-2xl shadow-lg cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-purple-500 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm" style="color: var(--text);">Study Groups</h3>
+                </div>
+
+                <!-- Classroom -->
+                <div class="floating-card hover-lift p-6 rounded-2xl shadow-lg cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-orange-500 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm" style="color: var(--text);">Classroom</h3>
+                </div>
+
+                <!-- AI Assistants -->
+                <div class="floating-card hover-lift p-6 rounded-2xl shadow-lg cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-pink-500 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm" style="color: var(--text);">AI Assistants</h3>
+                </div>
+
+                <!-- Educational Videos -->
+                <div class="floating-card hover-lift p-6 rounded-2xl shadow-lg cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm" style="color: var(--text);">Educational Videos</h3>
+                </div>
+
+                <!-- Support Center -->
+                <div class="floating-card hover-lift p-6 rounded-2xl shadow-lg cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-cyan-500 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm" style="color: var(--text);">Support Center</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Educational Videos Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-8" style="color: var(--text);">Featured Educational Videos</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Afrikaans Basics Video -->
+                <div class="video-card rounded-2xl overflow-hidden shadow-lg hover-lift">
+                    <!-- Educational video: Afrikaans language basics for Grade 1 students -->
+                    <img src="https://images.unsplash.com/photo-1588072432836-e10032774350?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Afrikaans Basics" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Grade 1</span>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Afrikaans</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: var(--text);">Afrikaans Basics</h3>
+                        <p class="text-sm mb-4" style="color: var(--text-muted);">Learn basic Afrikaans words and phrases for young learners</p>
+                        <button class="w-full py-3 rounded-lg font-medium text-white gradient-bg hover:opacity-90 transition-opacity">
+                            <i class="fas fa-play mr-2"></i>Watch Video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grade 1 Addition Video -->
+                <div class="video-card rounded-2xl overflow-hidden shadow-lg hover-lift">
+                    <!-- Mathematical concepts: Grade 1 students learning basic addition with visual aids -->
+                    <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Grade 1 Addition" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Grade 1</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Mathematics</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: var(--text);">Grade 1 Addition</h3>
+                        <p class="text-sm mb-4" style="color: var(--text-muted);">Fun and interactive addition lessons for beginners</p>
+                        <button class="w-full py-3 rounded-lg font-medium text-white gradient-bg hover:opacity-90 transition-opacity">
+                            <i class="fas fa-play mr-2"></i>Watch Video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mental Math Tricks Video -->
+                <div class="video-card rounded-2xl overflow-hidden shadow-lg hover-lift">
+                    <!-- Educational technology: Students using tablets for mental math practice -->
+                    <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Mental Math Tricks" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Grade 4-6</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Mathematics</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: var(--text);">Mental Math Tricks</h3>
+                        <p class="text-sm mb-4" style="color: var(--text-muted);">Quick calculation methods for intermediate learners</p>
+                        <button class="w-full py-3 rounded-lg font-medium text-white gradient-bg hover:opacity-90 transition-opacity">
+                            <i class="fas fa-play mr-2"></i>Watch Video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Photosynthesis Quiz Video -->
+                <div class="video-card rounded-2xl overflow-hidden shadow-lg hover-lift">
+                    <!-- Science experiments: Laboratory setting with plant biology demonstration -->
+                    <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Photosynthesis Quiz" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Grade 7-9</span>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Life Sciences</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: var(--text);">Photosynthesis Quiz</h3>
+                        <p class="text-sm mb-4" style="color: var(--text-muted);">Interactive quiz on plant biology and photosynthesis</p>
+                        <button class="w-full py-3 rounded-lg font-medium text-white gradient-bg hover:opacity-90 transition-opacity">
+                            <i class="fas fa-play mr-2"></i>Watch Video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Telling Time Video -->
+                <div class="video-card rounded-2xl overflow-hidden shadow-lg hover-lift">
+                    <!-- Classroom activities: Teacher demonstrating time concepts with clock -->
+                    <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Telling Time" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Grade 2-3</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Mathematics</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: var(--text);">Telling Time</h3>
+                        <p class="text-sm mb-4" style="color: var(--text-muted);">Learn to read analog and digital clocks</p>
+                        <button class="w-full py-3 rounded-lg font-medium text-white gradient-bg hover:opacity-90 transition-opacity">
+                            <i class="fas fa-play mr-2"></i>Watch Video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grade 12 Memo Content Video -->
+                <div class="video-card rounded-2xl overflow-hidden shadow-lg hover-lift">
+                    <!-- South African students learning: High school students in classroom setting -->
+                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Grade 12 Memo Content" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Grade 12</span>
+                            <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">Exam Prep</span>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: var(--text);">Grade 12 Memo Content</h3>
+                        <p class="text-sm mb-4" style="color: var(--text-muted);">NSC exam preparation and memorandum analysis</p>
+                        <button class="w-full py-3 rounded-lg font-medium text-white gradient-bg hover:opacity-90 transition-opacity">
+                            <i class="fas fa-play mr-2"></i>Watch Video
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Multi-Language Quiz Bank Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-8" style="color: var(--text);">Practice Zone - Multi-Language Quiz Bank</h2>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Quiz Selection Panel -->
+                <div class="p-6 rounded-2xl shadow-lg" style="background-color: var(--surface);">
+                    <h3 class="text-xl font-semibold mb-6" style="color: var(--text);">Select Quiz Parameters</h3>
+                    
+                    <!-- Grade Selection -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2" style="color: var(--text);">Grade</label>
+                        <select class="w-full p-3 rounded-lg border theme-transition" style="background-color: var(--background); color: var(--text); border-color: var(--secondary);">
+                            <option>Grade 1</option>
+                            <option>Grade 2</option>
+                            <option>Grade 3</option>
+                            <option>Grade 4</option>
+                            <option>Grade 5</option>
+                            <option>Grade 6</option>
+                            <option>Grade 7</option>
+                            <option>Grade 8</option>
+                            <option>Grade 9</option>
+                            <option>Grade 10</option>
+                            <option>Grade 11</option>
+                            <option>Grade 12</option>
+                            <option>ABET Level 1</option>
+                            <option>ABET Level 2</option>
+                            <option>ABET Level 3</option>
+                            <option>ABET Level 4</option>
+                        </select>
+                    </div>
+
+                    <!-- Subject Selection -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2" style="color: var(--text);">Subject</label>
+                        <select class="w-full p-3 rounded-lg border theme-transition" style="background-color: var(--background); color: var(--text); border-color: var(--secondary);">
+                            <option>Mathematics</option>
+                            <option>Home Language</option>
+                            <option>First Additional Language</option>
+                            <option>Life Skills</option>
+                            <option>Natural Sciences</option>
+                            <option>Social Sciences</option>
+                            <option>Life Sciences</option>
+                            <option>Physical Sciences</option>
+                            <option>Technology</option>
+                            <option>Economic Management Sciences</option>
+                        </select>
+                    </div>
+
+                    <!-- Language Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-2" style="color: var(--text);">Language</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors gradient-bg text-white">English</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">isiZulu</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">Afrikaans</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">Sesotho</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">isiXhosa</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">Setswana</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">Sepedi</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">siSwati</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">Tshivenda</button>
+                            <button class="p-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100" style="border-color: var(--secondary); color: var(--text);">Xitsonga</button>
+                        </div>
+                    </div>
+
+                    <button class="w-full py-3 rounded-lg font-medium text-white gradient-bg hover:opacity-90 transition-opacity">
+                        <i class="fas fa-play mr-2"></i>Start Quiz
+                    </button>
+                </div>
+
+                <!-- Sample Quiz Question -->
+                <div class="p-6 rounded-2xl shadow-lg" style="background-color: var(--surface);">
+                    <h3 class="text-xl font-semibold mb-6" style="color: var(--text);">Sample Question - Grade 4 English</h3>
+                    
+                    <div class="mb-6">
+                        <p class="text-lg mb-4" style="color: var(--text);">What is the opposite of 'happy'?</p>
+                        <div class="space-y-3">
+                            <label class="flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors" style="border-color: var(--secondary);">
+                                <input type="radio" name="question1" class="mr-3">
+                                <span style="color: var(--text);">Sad</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors" style="border-color: var(--secondary);">
+                                <input type="radio" name="question1" class="mr-3">
+                                <span style="color: var(--text);">Angry</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors" style="border-color: var(--secondary);">
+                                <input type="radio" name="question1" class="mr-3">
+                                <span style="color: var(--text);">Excited</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Read Aloud Feature -->
+                    <div class="border-t pt-4" style="border-color: var(--secondary);">
+                        <p class="text-sm mb-3" style="color: var(--text-muted);">
+                            <i class="fas fa-volume-up mr-2"></i>
+                            Select any word above and it will be read aloud to help with pronunciation
+                        </p>
+                        <button onclick="readAloud('What is the opposite of happy?')" class="px-4 py-2 rounded-lg bg-blue-100 text-blue-800 font-medium hover:bg-blue-200 transition-colors">
+                            <i class="fas fa-volume-up mr-2"></i>Read Question Aloud
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Educational Games Suite -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-8" style="color: var(--text);">Educational Games</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Math Quiz Game -->
+                <div class="p-4 rounded-xl shadow-lg hover-lift cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-blue-500 flex items-center justify-center text-white">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm text-center" style="color: var(--text);">Math Quiz</h3>
+                </div>
+
+                <!-- Word Search -->
+                <div class="p-4 rounded-xl shadow-lg hover-lift cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-green-500 flex items-center justify-center text-white">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm text-center" style="color: var(--text);">Word Search</h3>
+                </div>
+
+                <!-- Memory Match -->
+                <div class="p-4 rounded-xl shadow-lg hover-lift cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-purple-500 flex items-center justify-center text-white">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm text-center" style="color: var(--text);">Memory Match</h3>
+                </div>
+
+                <!-- Typing Sprint -->
+                <div class="p-4 rounded-xl shadow-lg hover-lift cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-orange-500 flex items-center justify-center text-white">
+                        <i class="fas fa-keyboard"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm text-center" style="color: var(--text);">Typing Sprint</h3>
+                </div>
+
+                <!-- Spelling Bee -->
+                <div class="p-4 rounded-xl shadow-lg hover-lift cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-pink-500 flex items-center justify-center text-white">
+                        <i class="fas fa-spell-check"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm text-center" style="color: var(--text);">Spelling Bee</h3>
+                </div>
+
+                <!-- Hangman -->
+                <div class="p-4 rounded-xl shadow-lg hover-lift cursor-pointer" style="background-color: var(--surface);">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-red-500 flex items-center justify-center text-white">
+                        <i class="fas fa-user-secret"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm text-center" style="color: var(--text);">Hangman</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- WhatsApp-Style Study Groups Chat -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-8" style="color: var(--text);">Study Groups</h2>
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Groups List -->
+                <div class="lg:col-span-1">
+                    <div class="p-6 rounded-2xl shadow-lg" style="background-color: var(--surface);">
+                        <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">My Study Groups</h3>
+                        
+                        <!-- Group Chat Items -->
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors border-l-4 border-blue-500" style="background-color: var(--background);">
+                                <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold mr-3">
+                                    M12
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold" style="color: var(--text);">Grade 12 Mathematics</h4>
+                                    <p class="text-sm" style="color: var(--text-muted);">Sarah: Anyone have the calculus notes?</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs" style="color: var(--text-muted);">14:30</span>
+                                    <div class="w-5 h-5 bg-green-500 rounded-full text-white text-xs flex items-center justify-center mt-1">3</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold mr-3">
+                                    E10
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold" style="color: var(--text);">Grade 10 English</h4>
+                                    <p class="text-sm" style="color: var(--text-muted);">Thabo: Let's discuss Shakespeare tomorrow</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs" style="color: var(--text-muted);">13:45</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                                <div class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white font-semibold mr-3">
+                                    S9
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold" style="color: var(--text);">Grade 9 Sciences</h4>
+                                    <p class="text-sm" style="color: var(--text-muted);">Nomsa: Chemistry test prep group</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs" style="color: var(--text-muted);">12:20</span>
+                                    <div class="w-5 h-5 bg-green-500 rounded-full text-white text-xs flex items-center justify-center mt-1">1</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Interface -->
+                <div class="lg:col-span-2">
+                    <div class="rounded-2xl shadow-lg overflow-hidden" style="background-color: var(--surface);">
+                        <!-- Chat Header -->
+                        <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--secondary); background-color: var(--background);">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold mr-3">
+                                    M12
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold" style="color: var(--text);">Grade 12 Mathematics</h4>
+                                    <p class="text-sm" style="color: var(--text-muted);">24 members • 12 online</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="p-2 rounded-lg hover:bg-gray-100" style="color: var(--text);">
+                                    <i class="fas fa-video"></i>
+                                </button>
+                                <button class="p-2 rounded-lg hover:bg-gray-100" style="color: var(--text);">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="p-2 rounded-lg hover:bg-gray-100" style="color: var(--text);">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Pinned Resources -->
+                        <div class="p-4 border-b" style="border-color: var(--secondary); background-color: var(--background);">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-thumbtack mr-2" style="color: var(--accent);"></i>
+                                <span class="font-semibold text-sm" style="color: var(--text);">Pinned Resources</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <div class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Calculus Notes.pdf</div>
+                                <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">Practice Tests</div>
+                                <div class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Study Timetable</div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div class="h-80 overflow-y-auto p-4 space-y-4" style="background-color: var(--background);">
+                            <!-- Study group collaboration: Students working together on projects -->
+                            <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=120" alt="Study Group Collaboration" class="w-full h-24 object-cover rounded-lg mb-4">
+                            
+                            <!-- Received Message -->
+                            <div class="flex items-start">
+                                <img src="https://pixabay.com/get/g7baca50343fc45f29ac2833ca7c59a5d6255cf38711bc6547655bd1536da237d88a32d83489b3ea50cfb9d8b5b2cbef46d996ed54c1bef4bc85d42fc9b4833bf_1280.jpg" alt="Sarah" class="w-8 h-8 rounded-full mr-2">
+                                <div>
+                                    <div class="flex items-center mb-1">
+                                        <span class="font-semibold text-sm mr-2" style="color: var(--text);">Sarah</span>
+                                        <span class="text-xs" style="color: var(--text-muted);">14:25</span>
+                                    </div>
+                                    <div class="chat-bubble-received p-3 rounded-lg max-w-xs">
+                                        <p class="text-sm">Hi everyone! Does anyone have the integration notes from yesterday's class? I missed that part 😅</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sent Message -->
+                            <div class="flex items-start justify-end">
+                                <div>
+                                    <div class="flex items-center justify-end mb-1">
+                                        <span class="text-xs" style="color: var(--text-muted);">14:27</span>
+                                        <span class="font-semibold text-sm ml-2" style="color: var(--text);">You</span>
+                                    </div>
+                                    <div class="chat-bubble-sent p-3 rounded-lg max-w-xs">
+                                        <p class="text-sm">I have them! Let me upload the PDF now 📚</p>
+                                    </div>
+                                    <div class="flex justify-end mt-1">
+                                        <i class="fas fa-check-double text-blue-500 text-xs"></i>
+                                    </div>
+                                </div>
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" alt="You" class="w-8 h-8 rounded-full ml-2">
+                            </div>
+
+                            <!-- File Share Message -->
+                            <div class="flex items-start">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" alt="You" class="w-8 h-8 rounded-full mr-2">
+                                <div>
+                                    <div class="flex items-center mb-1">
+                                        <span class="font-semibold text-sm mr-2" style="color: var(--text);">You</span>
+                                        <span class="text-xs" style="color: var(--text-muted);">14:28</span>
+                                    </div>
+                                    <div class="p-3 rounded-lg border" style="background-color: var(--surface); border-color: var(--secondary);">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-file-pdf text-red-500 text-xl mr-3"></i>
+                                            <div>
+                                                <p class="font-semibold text-sm" style="color: var(--text);">Integration_Notes_Chapter7.pdf</p>
+                                                <p class="text-xs" style="color: var(--text-muted);">2.4 MB</p>
+                                            </div>
+                                            <button class="ml-auto p-2 rounded-lg hover:bg-gray-100">
+                                                <i class="fas fa-download" style="color: var(--primary);"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Voice Note Message -->
+                            <div class="flex items-start justify-end">
+                                <div>
+                                    <div class="flex items-center justify-end mb-1">
+                                        <span class="text-xs" style="color: var(--text-muted);">14:30</span>
+                                        <span class="font-semibold text-sm ml-2" style="color: var(--text);">You</span>
+                                    </div>
+                                    <div class="chat-bubble-sent p-3 rounded-lg">
+                                        <div class="flex items-center">
+                                            <button class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center mr-2">
+                                                <i class="fas fa-play text-white text-xs"></i>
+                                            </button>
+                                            <div class="flex-1">
+                                                <div class="h-6 bg-white bg-opacity-20 rounded-full flex items-center px-2">
+                                                    <div class="w-1 h-3 bg-white rounded-full mr-1"></div>
+                                                    <div class="w-1 h-4 bg-white rounded-full mr-1"></div>
+                                                    <div class="w-1 h-2 bg-white rounded-full mr-1"></div>
+                                                    <div class="w-1 h-4 bg-white rounded-full mr-1"></div>
+                                                    <div class="w-1 h-3 bg-white rounded-full"></div>
+                                                </div>
+                                            </div>
+                                            <span class="text-xs text-white ml-2">0:15</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" alt="You" class="w-8 h-8 rounded-full ml-2">
+                            </div>
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div class="p-4 border-t flex items-center space-x-3" style="border-color: var(--secondary); background-color: var(--surface);">
+                            <button class="p-2 rounded-lg hover:bg-gray-100" style="color: var(--text);">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <div class="flex-1 relative">
+                                <input type="text" placeholder="Type a message..." class="w-full p-3 rounded-lg border theme-transition" style="background-color: var(--background); color: var(--text); border-color: var(--secondary);">
+                                <button class="absolute right-3 top-1/2 transform -translate-y-1/2" style="color: var(--text-muted);">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                            </div>
+                            <button class="p-2 rounded-lg hover:bg-gray-100" style="color: var(--text);">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Dashboard Preview -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-8" style="color: var(--text);">Admin Dashboard</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Stats Cards -->
+                <div class="p-6 rounded-2xl shadow-lg hover-lift" style="background-color: var(--surface);">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold" style="color: var(--text);">12,847</p>
+                            <p class="text-sm" style="color: var(--text-muted);">Total Users</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 rounded-2xl shadow-lg hover-lift" style="background-color: var(--surface);">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold" style="color: var(--text);">1,234</p>
+                            <p class="text-sm" style="color: var(--text-muted);">Active Teachers</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 rounded-2xl shadow-lg hover-lift" style="background-color: var(--surface);">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold" style="color: var(--text);">856</p>
+                            <p class="text-sm" style="color: var(--text-muted);">Content Items</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 rounded-2xl shadow-lg hover-lift" style="background-color: var(--surface);">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold" style="color: var(--text);">23</p>
+                            <p class="text-sm" style="color: var(--text-muted);">Open Reports</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Quick Actions -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Content Management -->
+                <div class="p-6 rounded-2xl shadow-lg" style="background-color: var(--surface);">
+                    <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">Content Management</h3>
+                    <div class="space-y-3">
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-upload mr-3"></i>Upload Educational Content
+                        </button>
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-question-circle mr-3"></i>Manage Quiz Bank
+                        </button>
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-video mr-3"></i>Educational Videos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User Management -->
+                <div class="p-6 rounded-2xl shadow-lg" style="background-color: var(--surface);">
+                    <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">User Management</h3>
+                    <div class="space-y-3">
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-user-check mr-3"></i>Approve Teachers
+                        </button>
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-users-cog mr-3"></i>Monitor Users
+                        </button>
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-chart-bar mr-3"></i>User Analytics
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Support Center -->
+                <div class="p-6 rounded-2xl shadow-lg" style="background-color: var(--surface);">
+                    <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">Support Center</h3>
+                    <div class="space-y-3">
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-flag mr-3"></i>Review Reports
+                        </button>
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-shield-alt mr-3"></i>Content Moderation
+                        </button>
+                        <button class="w-full p-3 rounded-lg border text-left hover:bg-gray-50 transition-colors" style="border-color: var(--secondary); color: var(--text);">
+                            <i class="fas fa-headset mr-3"></i>Help Center
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- South African Educational Resources -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-8" style="color: var(--text);">South African Educational Resources</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- DBE LTSM -->
+                <div class="p-6 rounded-2xl shadow-lg hover-lift" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sa-blue flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-center" style="color: var(--text);">DBE LTSM</h3>
+                    <p class="text-sm text-center mb-4" style="color: var(--text-muted);">Official Department of Basic Education Learning and Teaching Support Materials</p>
+                    <button class="w-full py-2 rounded-lg font-medium text-white bg-sa-blue hover:opacity-90 transition-opacity">
+                        Access Resources
+                    </button>
+                </div>
+
+                <!-- Siyavula -->
+                <div class="p-6 rounded-2xl shadow-lg hover-lift" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sa-green flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-center" style="color: var(--text);">Siyavula</h3>
+                    <p class="text-sm text-center mb-4" style="color: var(--text-muted);">Free Mathematics and Science textbooks and practice materials</p>
+                    <button class="w-full py-2 rounded-lg font-medium text-white bg-sa-green hover:opacity-90 transition-opacity">
+                        Access Resources
+                    </button>
+                </div>
+
+                <!-- WorksheetCloud -->
+                <div class="p-6 rounded-2xl shadow-lg hover-lift" style="background-color: var(--surface);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sa-gold flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-center" style="color: var(--text);">WorksheetCloud</h3>
+                    <p class="text-sm text-center mb-4" style="color: var(--text-muted);">Interactive worksheets and practice exercises for all grades</p>
+                    <button class="w-full py-2 rounded-lg font-medium text-white bg-sa-gold hover:opacity-90 transition-opacity">
+                        Access Resources
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 py-12 border-t" style="background-color: var(--surface); border-color: var(--secondary);">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white font-bold">
+                            FA
+                        </div>
+                        <span class="text-xl font-bold" style="color: var(--text);">FundaApp</span>
+                    </div>
+                    <p class="text-sm" style="color: var(--text-muted);">
+                        Empowering South African education through technology and innovation.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3" style="color: var(--text);">Learning</h4>
+                    <ul class="space-y-2 text-sm" style="color: var(--text-muted);">
+                        <li><a href="#" class="hover:underline">Practice Zone</a></li>
+                        <li><a href="#" class="hover:underline">Educational Games</a></li>
+                        <li><a href="#" class="hover:underline">Study Groups</a></li>
+                        <li><a href="#" class="hover:underline">Video Library</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3" style="color: var(--text);">Support</h4>
+                    <ul class="space-y-2 text-sm" style="color: var(--text-muted);">
+                        <li><a href="#" class="hover:underline">Help Center</a></li>
+                        <li><a href="#" class="hover:underline">Report Issues</a></li>
+                        <li><a href="#" class="hover:underline">Contact Us</a></li>
+                        <li><a href="#" class="hover:underline">Feedback</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3" style="color: var(--text);">Languages</h4>
+                    <ul class="space-y-2 text-sm" style="color: var(--text-muted);">
+                        <li>English • isiZulu • Afrikaans</li>
+                        <li>Sesotho • isiXhosa • Setswana</li>
+                        <li>Sepedi • siSwati • Tshivenda</li>
+                        <li>Xitsonga</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t mt-8 pt-8 text-center text-sm" style="border-color: var(--secondary); color: var(--text-muted);">
+                <p>&copy; 2024 FundaApp. Built for South African education. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Management
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        // Load saved theme on page load
+        (() => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+        })();
+
+        // Read Aloud Functionality (Web Speech API)
+        function readAloud(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US'; // Can be dynamically set based on selected language
+                utterance.rate = 0.8;
+                utterance.pitch = 1;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Speech synthesis not supported in your browser');
+            }
+        }
+
+        // Text selection read-aloud
+        (() => {
+            document.addEventListener('mouseup', function() {
+                const selection = window.getSelection()?.toString().trim();
+                if (selection && selection.length > 0) {
+                    // Add a small delay to allow for selection completion
+                    setTimeout(() => {
+                        const range = window.getSelection().getRangeAt(0);
+                        const rect = range.getBoundingClientRect();
+                        
+                        // Create read-aloud button
+                        const readButton = document.createElement('button');
+                        readButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        readButton.className = 'absolute z-50 p-2 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors';
+                        readButton.style.left = rect.left + 'px';
+                        readButton.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+                        readButton.onclick = () => {
+                            readAloud(selection);
+                            document.body.removeChild(readButton);
+                        };
+                        
+                        document.body.appendChild(readButton);
+                        
+                        // Remove button after 3 seconds
+                        setTimeout(() => {
+                            if (document.body.contains(readButton)) {
+                                document.body.removeChild(readButton);
+                            }
+                        }, 3000);
+                    }, 100);
+                }
+            });
+        })();
+
+        // Language selector functionality
+        document.getElementById('languageSelector').addEventListener('change', function(e) {
+            const language = e.target.value;
+            // TODO: Implement language switching logic
+            console.log('Language changed to:', language);
+        });
+
+        // Floating animation enhancement
+        (() => {
+            const floatingCards = document.querySelectorAll('.floating-card');
+            floatingCards.forEach((card, index) => {
+                card.style.animationDelay = (index * 0.5) + 's';
+            });
+        })();
+
+        // Simulate real-time notifications
+        (() => {
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+                notification.style.backgroundColor = type === 'success' ? 'var(--accent)' : 'var(--primary)';
+                notification.style.color = 'white';
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} mr-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Slide in
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                }, 100);
+                
+                // Slide out and remove
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(full)';
+                    setTimeout(() => {
+                        if (document.body.contains(notification)) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 4000);
+            }
+
+            // Simulate notifications
+            setTimeout(() => showNotification('New study group message from Grade 12 Mathematics'), 3000);
+            setTimeout(() => showNotification('Practice quiz completed successfully!', 'success'), 8000);
+        })();
+
+        // TODO: Implement 3D animations with React Three Fiber
+        // TODO: Implement Socket.IO real-time chat functionality  
+        // TODO: Implement file upload for study groups
+        // TODO: Implement video/voice call WebRTC functionality
+        // TODO: Implement quiz submission and scoring logic
+        // TODO: Implement admin dashboard CRUD operations
+        // TODO: Implement content moderation and reporting system
+        // TODO: Implement multi-language content switching
+        // TODO: Implement offline PWA functionality
+        // TODO: Implement user authentication and authorization
+    </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+here’s a ready-to-use Next.js component that implements your 3D Hero Section with animated floating icons, theme toggle, and animated logo intro. It uses React Three Fiber, TailwindCSS, and Framer Motion for smooth UI.
+
+Save this as app/components/HeroSection.tsx (or any component folder in your Next.js app).
+
+'use client'
+
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Mesh } from 'three'
+import { useRef, useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+
+/* ========== Floating 3D Icon ========== */
+function FloatingIcon({ color }: { color: string }) {
+  const ref = useRef<Mesh>(null!)
+  useFrame(() => {
+    const t = Date.now() * 0.001
+    ref.current.position.y = Math.sin(t) * 0.3
+    ref.current.rotation.y += 0.01
+    ref.current.rotation.x += 0.005
+  })
+  return (
+    <mesh ref={ref}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  )
+}
+
+/* ========== 3D Logo Intro ========== */
+function Logo3D() {
+  const ref = useRef<Mesh>(null!)
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime()
+    ref.current.rotation.y = Math.sin(t) * 0.5
+    ref.current.position.y = Math.sin(t * 2) * 0.2
+  })
+  return (
+    <mesh ref={ref}>
+      <sphereGeometry args={[0.6, 32, 32]} />
+      <meshStandardMaterial color="hotpink" />
+    </mesh>
+  )
+}
+
+/* ========== Theme Toggle ========== */
+const themes = ['light', 'dark', 'vibrant', 'soft'] as const
+type Theme = typeof themes[number]
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>('light')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme') as Theme
+    if (saved) setTheme(saved)
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  return (
+    <div className="flex gap-2">
+      {themes.map(t => (
+        <button
+          key={t}
+          onClick={() => setTheme(t)}
+          className={`px-3 py-1 rounded-xl text-sm capitalize ${
+            theme === t ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700'
+          }`}
+        >
+          {t}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/* ========== Hero Section ========== */
+export default function HeroSection() {
+  return (
+    <section className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-black transition-colors">
+      {/* Logo Intro */}
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 1, ease: 'easeOut' }}
+        className="h-40 w-40 mb-8"
+      >
+        <Canvas>
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[2, 2, 2]} />
+          <Logo3D />
+        </Canvas>
+      </motion.div>
+
+      {/* Title */}
+      <h1 className="text-4xl font-bold mb-4">Welcome to Funda-App</h1>
+      <p className="text-gray-600 dark:text-gray-300 mb-8 text-center max-w-xl">
+        Learn, play, and grow with South Africa’s digital learning hub — for learners,
+        teachers, ABET adults, and beyond.
+      </p>
+
+      {/* 3D Icons Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-4xl">
+        {['Practice Zone', 'Games Zone', 'Study Group', 'Classroom', 'AI Assistants', 'Support Center'].map((label, i) => (
+          <motion.div
+            key={label}
+            whileHover={{ scale: 1.1 }}
+            className="flex flex-col items-center space-y-2"
+          >
+            <div className="h-32 w-32">
+              <Canvas>
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[2, 2, 2]} />
+                <FloatingIcon color={['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4'][i]} />
+              </Canvas>
+            </div>
+            <span className="text-center font-medium">{label}</span>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Theme Toggle */}
+      <div className="mt-10">
+        <ThemeToggle />
+      </div>
+    </section>
+  )
+}

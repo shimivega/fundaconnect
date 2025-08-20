@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduConnect - South African Educational Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            900: '#1e3a8a'
+                        },
+                        secondary: {
+                            500: '#f59e0b',
+                            600: '#d97706'
+                        },
+                        accent: {
+                            500: '#10b981',
+                            600: '#059669'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'body': ['Open Sans', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'bounce-gentle': 'bounce-gentle 3s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'slide-in': 'slide-in 0.5s ease-out',
+                        'fade-in': 'fade-in 0.6s ease-out'
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotateY(0deg); }
+            25% { transform: translateY(-10px) rotateY(5deg); }
+            50% { transform: translateY(-15px) rotateY(0deg); }
+            75% { transform: translateY(-10px) rotateY(-5deg); }
+        }
+        
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes slide-in {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .float-card {
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+        }
+        
+        .float-card:hover {
+            transform: translateY(-20px) rotateX(10deg) rotateY(10deg);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+        
+        .glassmorphism {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .chat-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .theme-default {
+            --primary: #2563eb;
+            --secondary: #f59e0b;
+            --accent: #10b981;
+            --bg: #f8fafc;
+            --text: #1f2937;
+        }
+        
+        .theme-dark {
+            --primary: #3b82f6;
+            --secondary: #fbbf24;
+            --accent: #34d399;
+            --bg: #0f172a;
+            --text: #f8fafc;
+        }
+        
+        .theme-vibrant {
+            --primary: #e11d48;
+            --secondary: #f59e0b;
+            --accent: #8b5cf6;
+            --bg: #fef7ff;
+            --text: #1f2937;
+        }
+        
+        .theme-soft {
+            --primary: #6366f1;
+            --secondary: #f472b6;
+            --accent: #06d6a0;
+            --bg: #f0f9ff;
+            --text: #1f2937;
+        }
+        
+        .video-thumbnail {
+            transition: all 0.3s ease;
+        }
+        
+        .video-thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="font-body bg-gray-50 theme-default transition-all duration-500" id="body">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50 transition-all duration-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center animate-pulse-slow">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900">EduConnect</h1>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#dashboard" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Dashboard</a>
+                    <a href="#videos" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Videos</a>
+                    <a href="#study-groups" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Study Groups</a>
+                    <a href="#practice" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Practice</a>
+                    <a href="#contact" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Contact</a>
+                </div>
+                
+                <!-- Theme Switcher & User Menu -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex bg-gray-100 rounded-lg p-1">
+                        <button onclick="switchTheme('default')" class="theme-btn w-6 h-6 bg-blue-500 rounded-md"></button>
+                        <button onclick="switchTheme('dark')" class="theme-btn w-6 h-6 bg-gray-900 rounded-md ml-1"></button>
+                        <button onclick="switchTheme('vibrant')" class="theme-btn w-6 h-6 bg-pink-500 rounded-md ml-1"></button>
+                        <button onclick="switchTheme('soft')" class="theme-btn w-6 h-6 bg-indigo-400 rounded-md ml-1"></button>
+                    </div>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 text-gray-700 hover:text-blue-600">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">JD</span>
+                            </div>
+                            <span class="hidden sm:block">John Doe</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with 3D Dashboard -->
+    <section id="dashboard" class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 transition-all duration-500">
+        <!-- Beautiful modern classroom setting with diverse South African students using tablets -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&h=1080" alt="South African students learning with technology" class="w-full h-full object-cover opacity-10">
+        </div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-4 py-20">
+            <div class="text-center mb-16 animate-fade-in">
+                <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+                    Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">EduConnect</span>
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                    South Africa's premier educational platform connecting learners, teachers, and communities through innovative learning experiences.
+                </p>
+                <div class="flex flex-wrap justify-center gap-3 mb-8">
+                    <span class="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">11 Languages</span>
+                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">All Grades</span>
+                    <span class="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Real-time Collaboration</span>
+                    <span class="px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">AI-Powered</span>
+                </div>
+            </div>
+            
+            <!-- 3D Floating Dashboard Icons -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                <!-- Practice Zone -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 0s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-brain text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Practice Zone</h3>
+                        <p class="text-sm text-gray-600">MCQs & Essays across all subjects</p>
+                    </div>
+                </div>
+                
+                <!-- Games Zone -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 0.5s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-gamepad text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Games Zone</h3>
+                        <p class="text-sm text-gray-600">Educational games & quizzes</p>
+                    </div>
+                </div>
+                
+                <!-- Study Groups -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 1s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-users text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Study Groups</h3>
+                        <p class="text-sm text-gray-600">Collaborate with peers</p>
+                    </div>
+                </div>
+                
+                <!-- AI Assistants -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 1.5s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-robot text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">AI Assistants</h3>
+                        <p class="text-sm text-gray-600">Smart tutoring support</p>
+                    </div>
+                </div>
+                
+                <!-- Educational Videos -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 2s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-video text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Educational Videos</h3>
+                        <p class="text-sm text-gray-600">Curated learning content</p>
+                    </div>
+                </div>
+                
+                <!-- Classroom -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 2.5s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-chalkboard-teacher text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Virtual Classroom</h3>
+                        <p class="text-sm text-gray-600">Live lessons & streaming</p>
+                    </div>
+                </div>
+                
+                <!-- Support Center -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 3s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-headset text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Support Center</h3>
+                        <p class="text-sm text-gray-600">Help & mentorship</p>
+                    </div>
+                </div>
+                
+                <!-- Contact Hub -->
+                <div class="float-card bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl cursor-pointer animate-float" style="animation-delay: 3.5s;">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 transform transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-phone text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Contact Hub</h3>
+                        <p class="text-sm text-gray-600">Get in touch with us</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Educational Videos Gallery -->
+    <section id="videos" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Educational Videos</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Discover our comprehensive video library organized by grade and subject, featuring content in multiple South African languages.
+                </p>
+            </div>
+            
+            <!-- Video Category Tabs -->
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <button class="px-6 py-3 bg-blue-500 text-white rounded-full font-medium hover:bg-blue-600 transition-colors">All Grades</button>
+                <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">Foundation Phase</button>
+                <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">Intermediate Phase</button>
+                <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">Senior Phase</button>
+                <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">ABET</button>
+            </div>
+            
+            <!-- Featured Videos Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Afrikaans Basics Video -->
+                <div class="video-thumbnail bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer">
+                    <!-- Teacher helping students learn language -->
+                    <img src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=450" alt="Afrikaans language learning" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">Foundation Phase</span>
+                            <span class="text-gray-500 text-sm">12:34</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Afrikaans Basics - Greetings & Numbers</h3>
+                        <p class="text-gray-600 text-sm mb-4">Learn essential Afrikaans phrases and numbers with interactive examples.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-play text-blue-500 mr-2"></i>
+                                <span class="text-sm text-gray-500">1.2k views</span>
+                            </div>
+                            <button class="text-blue-500 hover:text-blue-600 font-medium text-sm">Watch Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grade 1 Addition Video -->
+                <div class="video-thumbnail bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer">
+                    <!-- Mathematical concepts visualization with children -->
+                    <img src="https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=450" alt="Grade 1 mathematics addition" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">Grade 1</span>
+                            <span class="text-gray-500 text-sm">8:45</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Grade 1 Addition Made Easy</h3>
+                        <p class="text-gray-600 text-sm mb-4">Fun and interactive ways to teach basic addition using visual aids.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-play text-blue-500 mr-2"></i>
+                                <span class="text-sm text-gray-500">856 views</span>
+                            </div>
+                            <button class="text-blue-500 hover:text-blue-600 font-medium text-sm">Watch Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mental Math Tricks Video -->
+                <div class="video-thumbnail bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer">
+                    <!-- Students engaged in mathematical learning activities -->
+                    <img src="https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=450" alt="Mental math tricks demonstration" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">Intermediate Phase</span>
+                            <span class="text-gray-500 text-sm">15:22</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Mental Math Tricks & Shortcuts</h3>
+                        <p class="text-gray-600 text-sm mb-4">Learn amazing mental calculation techniques to solve problems faster.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-play text-blue-500 mr-2"></i>
+                                <span class="text-sm text-gray-500">2.1k views</span>
+                            </div>
+                            <button class="text-blue-500 hover:text-blue-600 font-medium text-sm">Watch Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Photosynthesis Quiz Video -->
+                <div class="video-thumbnail bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer">
+                    <!-- Science experiments in classroom setting -->
+                    <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=450" alt="Science photosynthesis experiment" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full">Senior Phase</span>
+                            <span class="text-gray-500 text-sm">11:18</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Photosynthesis Interactive Quiz</h3>
+                        <p class="text-gray-600 text-sm mb-4">Test your knowledge of plant biology with this comprehensive quiz.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-play text-blue-500 mr-2"></i>
+                                <span class="text-sm text-gray-500">934 views</span>
+                            </div>
+                            <button class="text-blue-500 hover:text-blue-600 font-medium text-sm">Watch Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Telling Time Video -->
+                <div class="video-thumbnail bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer">
+                    <!-- Children learning with educational games and activities -->
+                    <img src="https://images.unsplash.com/photo-1596464716127-f2a82984de30?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=450" alt="Time telling educational activity" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">Grade 2-3</span>
+                            <span class="text-gray-500 text-sm">9:56</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Learning to Tell Time</h3>
+                        <p class="text-gray-600 text-sm mb-4">Master reading analog and digital clocks with fun exercises.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-play text-blue-500 mr-2"></i>
+                                <span class="text-sm text-gray-500">1.5k views</span>
+                            </div>
+                            <button class="text-blue-500 hover:text-blue-600 font-medium text-sm">Watch Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grade 12 Memo Content Video -->
+                <div class="video-thumbnail bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer">
+                    <!-- Professional educational workspace with advanced learning materials -->
+                    <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=450" alt="Grade 12 exam preparation materials" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full">Grade 12</span>
+                            <span class="text-gray-500 text-sm">25:43</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Grade 12 Exam Memo Review</h3>
+                        <p class="text-gray-600 text-sm mb-4">Comprehensive review of past paper solutions and exam strategies.</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-play text-blue-500 mr-2"></i>
+                                <span class="text-sm text-gray-500">3.2k views</span>
+                            </div>
+                            <button class="text-blue-500 hover:text-blue-600 font-medium text-sm">Watch Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Study Groups with WhatsApp-Style Chat -->
+    <section id="study-groups" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Study Groups & Collaboration</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Join study groups, collaborate with peers, and engage in real-time discussions with our WhatsApp-style chat interface.
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Study Groups List -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="p-6 bg-gradient-to-r from-blue-500 to-purple-600">
+                            <h3 class="text-xl font-bold text-white mb-2">My Study Groups</h3>
+                            <p class="text-blue-100">3 active groups</p>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-white font-bold">GM</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900">Grade 10 Mathematics</h4>
+                                    <p class="text-sm text-gray-500">12 members • Last active 5m ago</p>
+                                </div>
+                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xs">3</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-white font-bold">PS</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900">Physical Sciences</h4>
+                                    <p class="text-sm text-gray-500">8 members • Last active 1h ago</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-white font-bold">EN</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900">English Literature</h4>
+                                    <p class="text-sm text-gray-500">15 members • Last active 2h ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Interface -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden h-96 flex flex-col">
+                        <!-- Chat Header -->
+                        <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                                        <span class="font-bold">GM</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold">Grade 10 Mathematics</h3>
+                                        <p class="text-blue-100 text-sm">12 members online</p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors">
+                                        <i class="fas fa-video"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors">
+                                        <i class="fas fa-phone"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pinned Messages -->
+                        <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400">
+                            <div class="flex items-center">
+                                <i class="fas fa-thumbtack text-yellow-600 mr-2"></i>
+                                <p class="text-sm text-yellow-800">📚 Math test on Friday - Review chapters 3-5</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Messages -->
+                        <div class="flex-1 p-4 overflow-y-auto space-y-4">
+                            <!-- Received Message -->
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-2">
+                                    <span class="text-white text-xs font-bold">SA</span>
+                                </div>
+                                <div>
+                                    <div class="bg-gray-100 rounded-2xl rounded-tl-md p-3 chat-bubble">
+                                        <p class="text-gray-900">Hey everyone! Can someone explain the quadratic formula?</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Sarah • 10:30 AM</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Sent Message -->
+                            <div class="flex items-start justify-end">
+                                <div>
+                                    <div class="bg-blue-500 text-white rounded-2xl rounded-tr-md p-3 chat-bubble">
+                                        <p>Sure! The quadratic formula is x = (-b ± √(b²-4ac)) / (2a)</p>
+                                        <p>Let me share a helpful video link...</p>
+                                    </div>
+                                    <div class="flex items-center justify-end mt-1">
+                                        <p class="text-xs text-gray-500 mr-1">10:32 AM</p>
+                                        <i class="fas fa-check-double text-blue-500 text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- File Share Message -->
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-2">
+                                    <span class="text-white text-xs font-bold">MJ</span>
+                                </div>
+                                <div>
+                                    <div class="bg-gray-100 rounded-2xl rounded-tl-md p-3 chat-bubble">
+                                        <div class="flex items-center p-2 bg-white rounded-lg">
+                                            <i class="fas fa-file-pdf text-red-500 text-xl mr-3"></i>
+                                            <div>
+                                                <p class="font-semibold text-gray-900">Math_Practice_Problems.pdf</p>
+                                                <p class="text-sm text-gray-500">256 KB</p>
+                                            </div>
+                                            <button class="ml-auto text-blue-500 hover:text-blue-600">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Mike • 10:35 AM</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Reaction to Message -->
+                            <div class="flex items-start justify-end">
+                                <div>
+                                    <div class="bg-blue-500 text-white rounded-2xl rounded-tr-md p-3 chat-bubble">
+                                        <p>Thanks Mike! This is exactly what I needed 🙏</p>
+                                    </div>
+                                    <div class="flex items-center justify-end mt-1">
+                                        <div class="flex -space-x-1 mr-2">
+                                            <span class="bg-yellow-100 text-yellow-800 text-xs px-1 rounded">👍</span>
+                                            <span class="bg-red-100 text-red-800 text-xs px-1 rounded">❤️</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mr-1">10:36 AM</p>
+                                        <i class="fas fa-check-double text-blue-500 text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Input -->
+                        <div class="p-4 border-t bg-gray-50">
+                            <div class="flex items-center space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <div class="flex-1">
+                                    <input type="text" placeholder="Type a message..." class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <button class="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Multi-Language Support Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Learn in Your Language</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Supporting all 11 official South African languages with native content and interactive experiences.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl hover:scale-105 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-xl">EN</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">English</h3>
+                </div>
+                
+                <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl hover:scale-105 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-xl">ZU</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">isiZulu</h3>
+                </div>
+                
+                <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl hover:scale-105 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-xl">ST</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">Sesotho</h3>
+                </div>
+                
+                <div class="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl hover:scale-105 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-xl">AF</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">Afrikaans</h3>
+                </div>
+                
+                <div class="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl hover:scale-105 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-xl">XH</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">isiXhosa</h3>
+                </div>
+                
+                <div class="text-center p-6 bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl hover:scale-105 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-xl">TN</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">Setswana</h3>
+                </div>
+            </div>
+            
+            <!-- Language Features -->
+            <div class="mt-16 grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-volume-up text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Text-to-Speech</h3>
+                    <p class="text-gray-600">Native pronunciation support for all languages with Web Speech API integration.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-language text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Cultural Content</h3>
+                    <p class="text-gray-600">Culturally relevant examples and contexts that resonate with South African learners.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-globe-africa text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Curriculum Aligned</h3>
+                    <p class="text-gray-600">Content aligned with CAPS curriculum standards and local educational requirements.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Hub -->
+    <section id="contact" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Contact & Support Hub</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Get in touch with our team, access support resources, or schedule meetings with our education specialists.
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Contact Form -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h3>
+                    <form class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
+                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="John">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
+                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Doe">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                            <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="john@example.com">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Subject</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                <option>General Inquiry</option>
+                                <option>Technical Support</option>
+                                <option>Partnership Opportunity</option>
+                                <option>Content Suggestion</option>
+                                <option>Bug Report</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Message</label>
+                            <textarea rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Tell us how we can help you..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Contact Information & Support -->
+                <div class="space-y-8">
+                    <!-- Contact Methods -->
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Get in Touch</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-envelope text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Email Support</h4>
+                                    <p class="text-gray-600">support@educonnect.co.za</p>
+                                    <p class="text-sm text-gray-500">Response within 24 hours</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-phone text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Phone Support</h4>
+                                    <p class="text-gray-600">+27 11 234 5678</p>
+                                    <p class="text-sm text-gray-500">Mon-Fri, 8AM-6PM (SAST)</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-calendar text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Schedule Meeting</h4>
+                                    <p class="text-gray-600">Book a consultation</p>
+                                    <button class="text-purple-600 hover:text-purple-700 font-medium text-sm mt-1">Schedule Now →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Chat Widget -->
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Live Chat Support</h3>
+                        
+                        <!-- Professional educational workspace with support personnel -->
+                        <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" alt="Professional support team workspace" class="w-full h-32 object-cover rounded-lg mb-4">
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                                <span class="text-sm font-medium text-gray-900">Support team online</span>
+                            </div>
+                            <span class="text-xs text-gray-500">Avg. response: 2 mins</span>
+                        </div>
+                        
+                        <button class="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-600 hover:to-teal-700 transition-all duration-200 flex items-center justify-center">
+                            <i class="fas fa-comments mr-2"></i>
+                            Start Live Chat
+                        </button>
+                    </div>
+                    
+                    <!-- FAQ Section -->
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="border-b pb-4">
+                                <button class="flex items-center justify-between w-full text-left">
+                                    <span class="font-semibold text-gray-900">How do I join a study group?</span>
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="border-b pb-4">
+                                <button class="flex items-center justify-between w-full text-left">
+                                    <span class="font-semibold text-gray-900">Is the platform free to use?</span>
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="border-b pb-4">
+                                <button class="flex items-center justify-between w-full text-left">
+                                    <span class="font-semibold text-gray-900">Which languages are supported?</span>
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full mt-6 text-blue-600 hover:text-blue-700 font-medium">
+                            View All FAQs →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold">EduConnect</h3>
+                    </div>
+                    <p class="text-gray-400 mb-6">
+                        Empowering South African learners through innovative educational technology and collaborative learning experiences.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-400 transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-6">Platform</h4>
+                    <ul class="space-y-3 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Dashboard</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Study Groups</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Practice Zone</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Educational Videos</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Games Zone</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-6">Support</h4>
+                    <ul class="space-y-3 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Community Guidelines</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Safety & Privacy</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Accessibility</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-6">Languages</h4>
+                    <ul class="space-y-3 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">English</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">isiZulu</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Afrikaans</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Sesotho</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">+ 7 more languages</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm">
+                        © 2024 EduConnect. All rights reserved. Made with ❤️ for South African learners.
+                    </p>
+                    <div class="flex space-x-6 mt-4 md:mt-0">
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme switching functionality
+        function switchTheme(theme) {
+            const body = document.getElementById('body');
+            body.className = body.className.replace(/theme-\w+/, `theme-${theme}`);
+            
+            // Apply theme-specific styling
+            switch(theme) {
+                case 'dark':
+                    body.classList.add('bg-gray-900', 'text-white');
+                    body.classList.remove('bg-gray-50', 'text-gray-900');
+                    break;
+                case 'vibrant':
+                    body.classList.add('bg-gradient-to-br', 'from-pink-50', 'to-purple-50');
+                    body.classList.remove('bg-gray-900', 'bg-gray-50');
+                    break;
+                case 'soft':
+                    body.classList.add('bg-gradient-to-br', 'from-blue-50', 'to-indigo-50');
+                    body.classList.remove('bg-gray-900', 'bg-gray-50');
+                    break;
+                default: // default theme
+                    body.classList.add('bg-gray-50', 'text-gray-900');
+                    body.classList.remove('bg-gray-900', 'text-white', 'bg-gradient-to-br');
+            }
+            
+            // Store theme preference
+            localStorage.setItem('educonnect-theme', theme);
+            
+            // Add transition effect
+            body.style.transition = 'all 0.5s ease';
+        }
+        
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('educonnect-theme') || 'default';
+            switchTheme(savedTheme);
+            
+            // Initialize 3D animations
+            initFloatingAnimations();
+            
+            // Initialize smooth scrolling
+            initSmoothScrolling();
+        });
+        
+        function initFloatingAnimations() {
+            const cards = document.querySelectorAll('.float-card');
+            cards.forEach((card, index) => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = `translateY(-20px) rotateX(10deg) rotateY(10deg) scale(1.05)`;
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) rotateX(0) rotateY(0) scale(1)';
+                });
+            });
+        }
+        
+        function initSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Chat functionality simulation
+        function sendMessage() {
+            // TODO: Implement WebSocket connection for real-time messaging
+            console.log('Message sending functionality to be implemented');
+        }
+        
+        // Video play simulation
+        function playVideo(videoId) {
+            // TODO: Implement YouTube embed or video player integration
+            console.log('Video player functionality to be implemented');
+        }
+        
+        // Live chat widget
+        function startLiveChat() {
+            // TODO: Integrate with Socket.IO for real-time support chat
+            console.log('Live chat functionality to be implemented');
+        }
+        
+        // Voice command activation (Web Speech API)
+        function activateVoiceCommands() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-ZA'; // South African English
+                
+                recognition.onresult = function(event) {
+                    const command = event.results[0][0].transcript.toLowerCase();
+                    // TODO: Process voice commands for navigation and actions
+                    console.log('Voice command:', command);
+                };
+                
+                recognition.start();
+            }
+        }
+        
+        // Initialize PWA service worker for offline functionality
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    console.log('Service Worker registered successfully');
+                })
+                .catch(function(error) {
+                    console.log('Service Worker registration failed');
+                });
+        }
+        
+        // Responsive touch interactions for mobile
+        document.addEventListener('touchstart', function(e) {
+            // Add touch feedback for better mobile experience
+            if (e.target.classList.contains('float-card')) {
+                e.target.style.transform = 'scale(0.95)';
+            }
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            if (e.target.classList.contains('float-card')) {
+                e.target.style.transform = 'scale(1)';
+            }
+        });
+        
+        // Analytics and performance monitoring
+        function trackUserInteraction(action, element) {
+            // TODO: Implement analytics tracking for user interactions
+            console.log('User interaction:', action, element);
+        }
+        
+        // Add click tracking to all interactive elements
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.float-card')) {
+                trackUserInteraction('dashboard_card_click', e.target.closest('.float-card'));
+            }
+        });
+    </script>
+</body>
+</html>

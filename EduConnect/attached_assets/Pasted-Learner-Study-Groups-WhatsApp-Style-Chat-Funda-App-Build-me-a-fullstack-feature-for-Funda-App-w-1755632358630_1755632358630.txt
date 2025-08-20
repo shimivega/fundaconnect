@@ -1,0 +1,111 @@
+Learner Study Groups & WhatsApp-Style Chat (Funda-App)
+
+Build me a fullstack feature for Funda-App where learners can:
+
+Create study groups by grade + subject.
+
+Groups can be public (any learner can join) or private (invite link required).
+
+Each group has a unique shareable link.
+
+Chat system inside groups (WhatsApp-style):
+
+Real-time chat using Socket.IO.
+
+Messages have sender, timestamp, delivery/read status.
+
+Features:
+
+Text messages
+
+File sharing (PDFs, images, videos)
+
+Voice notes (record & send, audio player in chat)
+
+Emojis + reactions
+
+Pinned messages (important notes/resources)
+
+Video & Voice Calls (WebRTC + Socket.IO signaling):
+
+One-on-one calls
+
+Group calls (all members of a study group can join)
+
+Grid-style video layout
+
+Private Chats (Friends system):
+
+Learners can add each other as friends.
+
+One-on-one private messaging, same features as group chat.
+
+Profile & Status:
+
+Profile picture upload.
+
+Status message (text, image, or short video).
+
+“Online/Last seen” indicator.
+
+🗂️ Backend (Express + MongoDB + Socket.IO)
+Collections
+
+users → name, email, role, grade, profilePic, statusMessage, friends[].
+
+groups → name, grade, subject, type (public/private), inviteLink, members[].
+
+messages → senderId, groupId (or null for private DM), type (text|file|voice|video), content, timestamp, readBy[].
+
+Routes
+
+POST /api/groups → create new study group (with grade, subject, type).
+
+GET /api/groups/:id → fetch group details.
+
+POST /api/groups/:id/join → join group via invite link.
+
+POST /api/messages/send → send message (text/file/voice).
+
+GET /api/messages/:groupId → fetch chat history.
+
+POST /api/users/friends/:id → add friend.
+
+PATCH /api/users/profile → update profile pic + status.
+
+Socket.IO Events
+
+message → real-time message broadcast.
+
+typing → typing indicator.
+
+voice-note → upload or stream audio.
+
+call:start, call:join, call:end → manage WebRTC calls.
+
+🎨 Frontend (Next.js + Tailwind + shadcn/ui)
+Pages
+
+/groups → list of all study groups (filter by grade & subject).
+
+/groups/:id → WhatsApp-style group chat.
+
+/friends → private chats with friends.
+
+/profile → profile & status settings.
+
+Chat UI
+
+Left panel: groups + friends list.
+
+Right panel: active chat with:
+
+Chat bubbles (sent/received, timestamps, double ticks for read).
+
+File/voice note upload button.
+
+Emoji picker.
+
+“Pinned” messages at top.
+
+Call button → start voice/video call.

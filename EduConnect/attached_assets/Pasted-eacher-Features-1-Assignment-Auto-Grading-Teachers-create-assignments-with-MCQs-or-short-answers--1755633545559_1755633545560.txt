@@ -1,0 +1,228 @@
+eacher Features
+1. Assignment Auto-Grading
+
+Teachers create assignments with MCQs or short answers.
+
+Learners submit → system auto-grades MCQs.
+
+Short answers → AI-assisted keyword grading (optional).
+
+API:
+
+POST /api/assignments → create assignment
+
+POST /api/assignments/:id/submit → learner submission
+
+GET /api/assignments/:id/results → scores
+
+2. Teacher Marketplace
+
+Teachers can upload lesson plans, slides, worksheets.
+
+Optional pricing (free/paid).
+
+API:
+
+POST /api/marketplace
+
+GET /api/marketplace
+
+PATCH /api/marketplace/:id
+
+3. Teacher Collaboration Boards
+
+Kanban board per subject/grade.
+
+Columns: To Do, In Progress, Done.
+
+Drag-and-drop tasks.
+
+API:
+
+POST /api/collaboration/boards
+
+PATCH /api/collaboration/tasks/:id
+
+4. Resource Analytics
+
+Track views/downloads of teacher resources.
+
+API: GET /api/resources/analytics/:id → {views, downloads, uniqueUsers}
+
+📣 Admin + Monetization
+1. Ad Scheduling
+
+Ads (banners/videos/links) can be scheduled weekly.
+
+Target by grade, subject, page.
+
+API:
+
+POST /api/admin/ads (with startAt, endAt)
+
+GET /api/ads?placement=&grade=&subject=
+
+2. Sponsored Courses
+
+Companies/universities can upload sponsored lessons.
+
+Tagged as "Sponsored".
+
+API: POST /api/admin/sponsored
+
+3. Analytics Dashboard
+
+Charts: user growth, most-used subjects, active study groups.
+
+API:
+
+GET /api/admin/analytics/users
+
+GET /api/admin/analytics/engagement
+
+4. Multi-Admin Roles
+
+super-admin → full control
+
+content-moderator → manage textbooks, reports
+
+ad-manager → manage ads/sponsored courses
+
+5. Push Notifications
+
+Web + mobile (PWA).
+
+API: POST /api/admin/notifications
+
+🤝 Social / Groups
+1. Study Group Challenges
+
+Weekly quizzes between groups.
+
+API: POST /api/groups/:id/challenge
+
+2. Peer Mentoring
+
+Learners/ABET adults can request mentors.
+
+API: POST /api/mentorship/request
+
+3. Voice & Video Notes
+
+Learners send voice notes in chat.
+
+Optional: auto speech-to-text (Google API).
+
+4. Profile Badges
+
+Awarded automatically:
+
+"Math Champion" = top 5 in math quizzes
+
+"Science Helper" = answered 10 peer questions
+
+API: PATCH /api/users/:id/badges
+
+🎮 Games & Interactive Learning
+1. STEM Mini-Games
+
+Science lab simulations (drag-drop).
+
+Physics puzzles (gravity, electricity).
+
+2. Language Games
+
+Spelling bee (timed typing).
+
+Essay-building challenge (drag words into sentences).
+
+3. Cultural Zone
+
+SA history quizzes.
+
+Indigenous language flashcards (isiZulu, Sesotho, Afrikaans, Xhosa).
+
+4. VR/AR Flashcards
+
+Scan image → 3D interactive object.
+
+Tech: AR.js or WebXR.
+
+⚙️ Technical Enhancements
+1. Progressive Web App (PWA)
+
+Installable on phones.
+
+Offline caching for PDFs/quizzes.
+
+2. Multi-Language Support
+
+English, isiZulu, Sesotho, Afrikaans, Xhosa.
+
+Store preferredLanguage in user profile.
+
+3. Cloud Storage Integration
+
+Large file uploads (PDF/video) stored in AWS S3 or Google Drive API.
+
+4. AI Analytics
+
+Predict dropout risk by:
+
+missed assignments
+
+inactive days
+
+low quiz scores
+
+API: GET /api/admin/ai/alerts
+
+🗂 Backend Models (MongoDB)
+
+Assignment
+
+{
+  title, subject, grade,
+  questions: [{ type:'mcq'|'short', question, options:[String], answer }],
+  createdBy: ObjectId<User>,
+  submissions: [{ learnerId, answers, score, submittedAt }]
+}
+
+
+Marketplace
+
+{
+  title, description, fileUrl, price, uploadedBy, tags:[String], downloads:Number
+}
+
+
+CollaborationBoard
+
+{
+  subject, grade,
+  tasks: [{ text, status:'todo'|'in-progress'|'done', assignedTo }]
+}
+
+
+Badge
+
+{ userId, name, description, earnedAt }
+
+
+SponsoredCourse
+
+{ title, org, url, grade, subject, active }
+
+📊 Admin Dashboard (Frontend Pages)
+
+/admin/ads → create/edit/schedule ads
+
+/admin/analytics → charts (Recharts)
+
+/admin/sponsored → upload sponsored courses
+
+/admin/notifications → send push notices
+
+/admin/reports → manage abuse cases
+
+/admin/resources → textbooks & practice zone control

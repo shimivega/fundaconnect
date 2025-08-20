@@ -1,0 +1,143 @@
+1. Content Moderation
+
+Filter offensive words in chat messages before saving.
+
+Store flagged messages in DB with reported: true.
+
+Allow learners to report abuse → /api/messages/:id/report.
+
+Admin dashboard can review reported messages.
+
+📌 2. Pinned Resources
+
+Groups can pin resources (textbooks, notes, PDFs, videos, images).
+
+Pinned resources stored in groups.pinnedResources[].
+
+API:
+
+PATCH /api/groups/:id/pin → pin/unpin resource.
+
+GET /api/groups/:id/pinned → fetch pinned resources.
+
+📅 3. Study Timetable (Shared Calendar)
+
+Each study group can create a timetable of events (study sessions, tests, deadlines).
+
+API:
+
+POST /api/groups/:id/timetable → add/edit/delete session.
+
+GET /api/groups/:id/timetable → fetch group timetable.
+
+Stored as array of { title, description, startDate, endDate, createdBy }.
+
+📊 4. Polls & Quizzes in Chat
+
+Allow quick polls and mini quizzes inside group chat.
+
+Message type can be: text | file | poll | quiz.
+
+Poll schema: { question, options[], votes[] }.
+
+Quiz schema: { question, options[], correctAnswer, responses[] }.
+
+API:
+
+POST /api/messages/poll → create poll.
+
+POST /api/messages/quiz → create quiz.
+
+PATCH /api/messages/:id/vote → cast vote.
+
+PATCH /api/messages/:id/answer → submit quiz answer.
+
+🌙 5. Dark Mode Toggle
+
+Frontend feature: toggle between light/dark mode.
+
+User preference stored in users.theme (light | dark).
+
+API: PATCH /api/users/theme → update preference.
+
+Auto-load user’s theme on login.
+
+🗂️ Backend (Express + MongoDB + Socket.IO)
+MongoDB Collections
+users
+{
+  name, email, password, role, grade,
+  theme: "light" | "dark",
+  profilePic, status
+}
+
+groups
+{
+  name, grade, subject, type, inviteLink,
+  members: [userId],
+  pinnedResources: [{ type, url, title, uploadedBy }],
+  timetable: [{ title, description, startDate, endDate, createdBy }]
+}
+
+messages
+{
+  senderId, groupId,
+  type: "text" | "file" | "poll" | "quiz",
+  content, // text or file URL
+  poll: { question, options: [String], votes: [{ userId, optionIndex }] },
+  quiz: { question, options: [String], correctAnswer, responses: [{ userId, answerIndex }] },
+  reported: Boolean,
+  createdAt
+}
+
+API Routes
+
+POST /api/messages/send → send message (auto filter bad words).
+
+POST /api/messages/:id/report → report abuse.
+
+PATCH /api/groups/:id/pin → pin/unpin resource.
+
+POST /api/groups/:id/timetable → add/edit/delete session.
+
+POST /api/messages/poll → create poll.
+
+POST /api/messages/quiz → create quiz.
+
+PATCH /api/messages/:id/vote → vote in poll.
+
+PATCH /api/messages/:id/answer → answer quiz.
+
+PATCH /api/users/theme → save theme preference.
+
+🎨 Frontend (Next.js + Tailwind + shadcn/ui)
+
+/groups/:id → WhatsApp-style chat with:
+
+Message bubbles
+
+Report button (abuse reporting)
+
+Pinned resources section at top
+
+Polls & quizzes inline in chat
+
+Timetable tab with shared calendar (use FullCalendar or shadcn Calendar)
+
+Dark mode toggle in navbar
+
+🛠️ Deployment
+
+Frontend → Vercel
+
+Backend → Render / Railway / Replit
+
+Shared .env → MONGO_URI, JWT_SECRET, NEXT_PUBLIC_API_URL
+
+⚡ Deliverables:
+
+Backend API (Express + MongoDB + Socket.IO).
+
+Frontend pages (Next.js + Tailwind + shadcn/ui).
+
+Moderation system, pinned resources, shared timetable, polls/quizzes in chat, dark mode toggle.

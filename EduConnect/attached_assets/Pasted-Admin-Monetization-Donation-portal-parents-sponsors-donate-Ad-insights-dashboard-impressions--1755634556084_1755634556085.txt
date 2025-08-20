@@ -1,0 +1,822 @@
+Admin + Monetization
+
+Donation portal (parents/sponsors donate)
+
+Ad insights dashboard (impressions/clicks)
+
+Micro-scholarships (sponsor top learners)
+
+Partner portal (upload career-prep resources)
+
+Technical Enhancements
+
+Offline sync (service worker + background queue)
+
+Voice commands (Web Speech API)
+
+Exam mode (fullscreen + anti-switch + copy/paste lock)
+
+Multi-device sync (resume study session)
+
+Study Groups Add-ons
+
+Shared whiteboard (Socket.io + canvas)
+
+Mini podcasts (record/upload/play)
+
+Revision playlists (curated resources)
+
+Mood tracker (daily check-ins)
+
+Assumptions: you already have auth (JWT), User model with roles (admin|teacher|learner|abet), and a working Express server & Next.js app. You can drop these files into backend/ and frontend/ as shown.
+
+BACKEND (Express + MongoDB + Socket.io)
+0) Models
+// backend/models/Donation.js
+const mongoose = require('mongoose');
+const donationSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // optional
+  name: String,
+  email: String,
+  amountCents: { type: Number, required: true },
+  currency: { type: String, default: 'ZAR' },
+  message: String,
+  method: { type: String, enum: ['card','eft','cash'], default: 'card' },
+  status: { type: String, enum: ['pending','succeeded','failed'], default: 'pending' },
+  receiptUrl: String
+},{timestamps:true});
+module.exports = mongoose.model('Donation', donationSchema);
+
+// backend/models/AdCampaign.js
+const adCampaignSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  ownerOrg: String,
+  imageUrl: String,
+  linkUrl: String,
+  target: { grades: [String], subjects: [String] },
+  startAt: Date, endAt: Date,
+  // basic metrics
+  impressions: { type: Number, default: 0 },
+  clicks: { type: Number, default: 0 },
+  isActive: { type: Boolean, default: true }
+},{timestamps:true});
+module.exports = mongoose.model('AdCampaign', adCampaignSchema);
+
+// backend/models/Scholarship.js
+const scholarshipSchema = new mongoose.Schema({
+  sponsor: { type: String, required: true }, // business name
+  title: { type: String, required: true },
+  description: String,
+  amountCents: { type: Number, required: true },
+  criteria: { grade: String, subject: String, minScore: { type: Number, default: 70 } },
+  winners: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  open: { type: Boolean, default: true }
+},{timestamps:true});
+module.exports = mongoose.model('Scholarship', scholarshipSchema);
+
+// backend/models/PartnerResource.js
+const partnerResourceSchema = new mongoose.Schema({
+  partnerName: String,
+  uploader: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  title: String,
+  type: { type: String, enum: ['pdf','video','link'] },
+  url: String,
+  description: String,
+  tags: [String],
+  approved: { type: Boolean, default: false }
+},{timestamps:true});
+module.exports = mongoose.model('PartnerResource', partnerResourceSchema);
+
+// backend/models/StudyState.js  (Multi-device sync)
+const studyStateSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
+  subject: String,
+  resourceId: String,
+  position: { type: Number, default: 0 }, // e.g., seconds in video, page in pdf
+  notesDraft: String,
+  updatedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+module.exports = mongoose.model('StudyState', studyStateSchema);
+
+// backend/models/Podcast.js
+const podcastSchema = new mongoose.Schema({
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  title: String,
+  audioUrl: String,
+  durationSec: Number,
+  groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' }, // optional
+  visible: { type: Boolean, default: true }
+},{timestamps:true});
+module.exports = mongoose.model('Podcast', podcastSchema);
+
+// backend/models/Playlist.js
+const playlistSchema = new mongoose.Schema({
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  title: String,
+  items: [{ kind: { type: String, enum: ['pdf','video','link','podcast'] }, title: String, url: String, meta: Object }],
+  public: { type: Boolean, default: false }
+},{timestamps:true});
+module.exports = mongoose.model('Playlist', playlistSchema);
+
+// backend/models/MoodLog.js
+const moodLogSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  mood: { type: String, enum: ['🙂','😐','☹️','😫','😎','🥱'], required: true },
+  note: String,
+  date: { type: String, required: true } // YYYY-MM-DD
+},{timestamps:true});
+moodLogSchema.index({ user:1, date:1 }, { unique: true });
+module.exports = mongoose.model('MoodLog', moodLogSchema);
+
+1) Routes: Donations
+// backend/routes/donations.js
+const express = require('express');
+const Donation = require('../models/Donation');
+const { authRequired, onlyAdmin } = require('../middleware/auth');
+const router = express.Router();
+
+/** Public: create a donation intent (mock card flow; plug your PSP later) */
+router.post('/create', async (req,res)=>{
+  const { name, email, amountCents, message, method='card' } = req.body;
+  if (!amountCents || amountCents < 500) return res.status(400).json({ message:'Min donation R5.00' });
+  const doc = await Donation.create({ user: req.user?.id, name, email, amountCents, message, method, status: 'succeeded' });
+  res.json({ ok:true, donation: doc });
+});
+
+/** Admin: list donations + stats */
+router.get('/admin/list', authRequired, onlyAdmin, async (req,res)=>{
+  const items = await Donation.find().sort('-createdAt').limit(500);
+  const total = items.reduce((s,x)=>s+x.amountCents,0);
+  res.json({ items, totalCents: total });
+});
+
+module.exports = router;
+
+2) Routes: Ads & Insights
+// backend/routes/ads.js
+const express = require('express');
+const AdCampaign = require('../models/AdCampaign');
+const { authRequired, onlyAdmin } = require('../middleware/auth');
+const router = express.Router();
+
+// Admin CRUD
+router.post('/campaign', authRequired, onlyAdmin, async (req,res)=>{
+  const it = await AdCampaign.create(req.body);
+  res.json(it);
+});
+router.put('/campaign/:id', authRequired, onlyAdmin, async (req,res)=>{
+  const it = await AdCampaign.findByIdAndUpdate(req.params.id, req.body, { new:true });
+  res.json(it);
+});
+router.get('/campaigns', authRequired, onlyAdmin, async (req,res)=>{
+  const items = await AdCampaign.find().sort('-createdAt');
+  res.json(items);
+});
+
+// Public: fetch active ads (basic targeting)
+router.get('/serve', async (req,res)=>{
+  const { grade, subject } = req.query;
+  const now = new Date();
+  const items = await AdCampaign.find({
+    isActive: true,
+    $or: [{ startAt: { $lte: now } }, { startAt: null }],
+    $or2: [{ endAt: { $gte: now } }, { endAt: null }],
+  }).lean();
+
+  const filtered = items.filter(a=>{
+    const gOk = !a.target?.grades?.length || a.target.grades.includes(grade);
+    const sOk = !a.target?.subjects?.length || a.target.subjects.includes(subject);
+    return gOk && sOk;
+  });
+
+  res.json(filtered.slice(0, 5));
+});
+
+// Metrics endpoints
+router.post('/impression/:id', async (req,res)=>{
+  await AdCampaign.updateOne({ _id: req.params.id }, { $inc: { impressions: 1 }});
+  res.json({ ok:true });
+});
+router.post('/click/:id', async (req,res)=>{
+  await AdCampaign.updateOne({ _id: req.params.id }, { $inc: { clicks: 1 }});
+  res.json({ ok:true });
+});
+
+module.exports = router;
+
+3) Routes: Micro-Scholarships
+// backend/routes/scholarships.js
+const express = require('express');
+const { authRequired, onlyAdmin } = require('../middleware/auth');
+const Scholarship = require('../models/Scholarship');
+const router = express.Router();
+
+// Admin create/update
+router.post('/', authRequired, onlyAdmin, async (req,res)=> res.json(await Scholarship.create(req.body)));
+router.put('/:id', authRequired, onlyAdmin, async (req,res)=> res.json(await Scholarship.findByIdAndUpdate(req.params.id, req.body, { new:true })));
+
+// Public list (open only)
+router.get('/', authRequired, async (req,res)=> res.json(await Scholarship.find({ open: true }).sort('-createdAt')));
+
+// Admin: award winners
+router.post('/:id/award', authRequired, onlyAdmin, async (req,res)=>{
+  const { userId } = req.body;
+  const s = await Scholarship.findByIdAndUpdate(req.params.id, { $addToSet: { winners: userId }}, { new:true });
+  res.json(s);
+});
+
+module.exports = router;
+
+4) Routes: Partner Portal (career prep)
+// backend/routes/partners.js
+const express = require('express');
+const { authRequired, onlyAdmin } = require('../middleware/auth');
+const PartnerResource = require('../models/PartnerResource');
+const router = express.Router();
+
+// Partner upload (partner = teacher or verified org; gate with role if needed)
+router.post('/upload', authRequired, async (req,res)=>{
+  const it = await PartnerResource.create({ ...req.body, uploader: req.user.id, approved: false });
+  res.json({ message:'Submitted for review', it });
+});
+
+// Admin review
+router.get('/admin/list', authRequired, onlyAdmin, async (req,res)=> res.json(await PartnerResource.find().sort('-createdAt')));
+router.post('/admin/approve/:id', authRequired, onlyAdmin, async (req,res)=>{
+  res.json(await PartnerResource.findByIdAndUpdate(req.params.id, { approved: true }, { new:true }));
+});
+
+// Public list (approved)
+router.get('/catalog', async (req,res)=> res.json(await PartnerResource.find({ approved: true }).sort('-updatedAt')));
+
+module.exports = router;
+
+5) Offline Sync + Multi-Device Study State
+// backend/routes/studyState.js
+const express = require('express');
+const { authRequired } = require('../middleware/auth');
+const StudyState = require('../models/StudyState');
+const router = express.Router();
+
+router.get('/', authRequired, async (req,res)=>{
+  const s = await StudyState.findOne({ user: req.user.id });
+  res.json(s || {});
+});
+router.post('/', authRequired, async (req,res)=>{
+  const s = await StudyState.findOneAndUpdate(
+    { user: req.user.id },
+    { ...req.body, updatedAt: new Date() },
+    { upsert: true, new: true }
+  );
+  res.json(s);
+});
+
+module.exports = router;
+
+6) Mini Podcasts (Audio)
+// backend/routes/podcasts.js
+const express = require('express');
+const { authRequired } = require('../middleware/auth');
+const Podcast = require('../models/Podcast');
+const router = express.Router();
+
+router.post('/', authRequired, async (req,res)=>{
+  const it = await Podcast.create({ ...req.body, owner: req.user.id });
+  res.json(it);
+});
+router.get('/', authRequired, async (req,res)=>{
+  const list = await Podcast.find({ visible: true }).sort('-createdAt');
+  res.json(list);
+});
+
+module.exports = router;
+
+7) Revision Playlists
+// backend/routes/playlists.js
+const express = require('express');
+const { authRequired } = require('../middleware/auth');
+const Playlist = require('../models/Playlist');
+const router = express.Router();
+
+router.post('/', authRequired, async (req,res)=> res.json(await Playlist.create({ ...req.body, owner: req.user.id })));
+router.get('/mine', authRequired, async (req,res)=> res.json(await Playlist.find({ owner: req.user.id })));
+router.get('/public', async (req,res)=> res.json(await Playlist.find({ public: true }).sort('-updatedAt')));
+
+module.exports = router;
+
+8) Mood Tracker
+// backend/routes/mood.js
+const express = require('express');
+const { authRequired, onlyAdmin } = require('../middleware/auth');
+const MoodLog = require('../models/MoodLog');
+const router = express.Router();
+
+router.post('/log', authRequired, async (req,res)=>{
+  const { mood, note, date } = req.body; // date = YYYY-MM-DD
+  const it = await MoodLog.findOneAndUpdate(
+    { user: req.user.id, date },
+    { mood, note },
+    { upsert: true, new: true }
+  );
+  res.json(it);
+});
+router.get('/mine', authRequired, async (req,res)=>{
+  const items = await MoodLog.find({ user: req.user.id }).sort('-date').limit(60);
+  res.json(items);
+});
+router.get('/admin/overview', authRequired, onlyAdmin, async (req,res)=>{
+  const latest = await MoodLog.aggregate([
+    { $sort: { date: -1 } },
+    { $group: { _id: '$user', last: { $first: '$mood' } } }
+  ]);
+  res.json({ latestCount: latest.length });
+});
+
+module.exports = router;
+
+9) Socket.io Whiteboard (server side)
+// backend/socket/whiteboard.js
+function initWhiteboard(io){
+  const nsp = io.of('/whiteboard');
+  nsp.on('connection', (socket)=>{
+    socket.on('join', ({ roomId })=>{
+      socket.join(roomId);
+    });
+    socket.on('draw', ({ roomId, stroke })=>{
+      // broadcast to room
+      socket.to(roomId).emit('draw', { stroke });
+    });
+    socket.on('clear', ({ roomId })=>{
+      socket.to(roomId).emit('clear');
+    });
+  });
+}
+module.exports = { initWhiteboard };
+
+Wire into your server
+// backend/server.js (additions)
+const http = require('http');
+const { Server } = require('socket.io');
+
+const donationsRoutes = require('./routes/donations');
+const adsRoutes = require('./routes/ads');
+const scholarshipsRoutes = require('./routes/scholarships');
+const partnersRoutes = require('./routes/partners');
+const studyStateRoutes = require('./routes/studyState');
+const podcastsRoutes = require('./routes/podcasts');
+const playlistsRoutes = require('./routes/playlists');
+const moodRoutes = require('./routes/mood');
+const { initWhiteboard } = require('./socket/whiteboard');
+
+app.use('/api/donations', donationsRoutes);
+app.use('/api/ads', adsRoutes);
+app.use('/api/scholarships', scholarshipsRoutes);
+app.use('/api/partners', partnersRoutes);
+app.use('/api/study-state', studyStateRoutes);
+app.use('/api/podcasts', podcastsRoutes);
+app.use('/api/playlists', playlistsRoutes);
+app.use('/api/mood', moodRoutes);
+
+// create http + socket server
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+initWhiteboard(io);
+
+server.listen(process.env.PORT || 4000, ()=> console.log('API + Sockets up'));
+
+FRONTEND (Next.js)
+1) Donation Page
+// frontend/app/donate/page.tsx
+'use client';
+import { useState } from 'react';
+
+export default function DonatePage(){
+  const [amount, setAmount] = useState(5000); // cents
+  const [name,setName]=useState(''); const [email,setEmail]=useState('');
+  const [message,setMessage]=useState(''); const [status,setStatus]=useState('');
+
+  async function donate(){
+    const r = await fetch('/api/donations/create', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, email, amountCents: amount, message, method:'card' })
+    });
+    const data = await r.json();
+    setStatus(data.ok ? 'Thank you for supporting learners! 🎉' : 'Failed.');
+  }
+
+  return (
+    <div className="max-w-lg mx-auto p-6 space-y-3">
+      <h1 className="text-2xl font-bold">Support the Platform</h1>
+      <input className="border px-3 py-2 rounded w-full" placeholder="Name" onChange={e=>setName(e.target.value)} />
+      <input className="border px-3 py-2 rounded w-full" placeholder="Email" onChange={e=>setEmail(e.target.value)} />
+      <input type="number" className="border px-3 py-2 rounded w-full" value={amount} onChange={e=>setAmount(Number(e.target.value))}/>
+      <textarea className="border px-3 py-2 rounded w-full" placeholder="Message (optional)" onChange={e=>setMessage(e.target.value)} />
+      <button onClick={donate} className="bg-green-600 text-white px-4 py-2 rounded">Donate</button>
+      {status && <div className="p-3 bg-green-50 border rounded">{status}</div>}
+    </div>
+  );
+}
+
+2) Ad Loader + Click/Impression Tracking
+// frontend/components/AdSlot.tsx
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function AdSlot({ grade, subject }: { grade?:string, subject?:string }){
+  const [ads,setAds]=useState<any[]>([]);
+  useEffect(()=>{
+    (async ()=>{
+      const r = await fetch(`/api/ads/serve?grade=${grade||''}&subject=${subject||''}`);
+      const data = await r.json(); setAds(data);
+      data.forEach((a:any)=> fetch(`/api/ads/impression/${a._id}`, { method:'POST' }));
+    })();
+  },[grade,subject]);
+
+  if(!ads.length) return null;
+  const ad = ads[0];
+  return (
+    <a href={ad.linkUrl} target="_blank" onClick={()=>fetch(`/api/ads/click/${ad._id}`,{method:'POST'})}
+       className="block border rounded overflow-hidden">
+      <img src={ad.imageUrl} alt={ad.name} className="w-full" />
+    </a>
+  );
+}
+
+3) Partner Portal (upload)
+// frontend/app/partners/upload/page.tsx
+'use client';
+import { useState } from 'react';
+
+export default function PartnerUpload(){
+  const token = typeof window!=='undefined'?localStorage.getItem('token'):'';
+  const [form,setForm]=useState({ partnerName:'', title:'', type:'link', url:'', description:'', tags:''});
+  const [msg,setMsg]=useState('');
+
+  async function submit(){
+    const body={...form, tags: form.tags?form.tags.split(',').map(t=>t.trim()):[]};
+    const r = await fetch('/api/partners/upload', { method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`}, body: JSON.stringify(body) });
+    const data = await r.json(); setMsg(data.message || 'Submitted');
+  }
+
+  return (
+    <div className="max-w-xl mx-auto p-6 space-y-2">
+      <h1 className="text-2xl font-bold">Partner Upload</h1>
+      <input className="border px-3 py-2 rounded w-full" placeholder="Organisation" onChange={e=>setForm({...form,partnerName:e.target.value})}/>
+      <input className="border px-3 py-2 rounded w-full" placeholder="Title" onChange={e=>setForm({...form,title:e.target.value})}/>
+      <select className="border px-3 py-2 rounded w-full" onChange={e=>setForm({...form,type:e.target.value})}>
+        <option value="link">Link</option><option value="pdf">PDF</option><option value="video">Video</option>
+      </select>
+      <input className="border px-3 py-2 rounded w-full" placeholder="URL" onChange={e=>setForm({...form,url:e.target.value})}/>
+      <textarea className="border px-3 py-2 rounded w-full" placeholder="Description" onChange={e=>setForm({...form,description:e.target.value})}/>
+      <input className="border px-3 py-2 rounded w-full" placeholder="Tags (comma)" onChange={e=>setForm({...form,tags:e.target.value})}/>
+      <button onClick={submit} className="bg-indigo-600 text-white px-4 py-2 rounded">Submit</button>
+      {msg && <div className="p-2 bg-yellow-50 border rounded">{msg}</div>}
+    </div>
+  );
+}
+
+4) Offline Sync (Service Worker + queue)
+
+Register service worker
+
+// frontend/app/layout.tsx (add in useEffect on client)
+'use client';
+import { useEffect } from 'react';
+export default function RootLayout({ children }: any){
+  useEffect(()=>{
+    if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js'); }
+  },[]);
+  return (<html><body>{children}</body></html>);
+}
+
+
+Service worker + background queue
+
+// frontend/public/sw.js
+const QUEUE_KEY = 'offline-queue-v1';
+
+self.addEventListener('install', (e)=> self.skipWaiting());
+self.addEventListener('activate', (e)=> self.clients.claim());
+
+// Cache app shell (extend as needed)
+self.addEventListener('fetch', (event)=>{
+  const req = event.request;
+  // queue POSTs while offline, replay when online
+  if (req.method === 'POST' && req.url.includes('/api/')) {
+    event.respondWith((async ()=>{
+      try {
+        const res = await fetch(req.clone());
+        return res;
+      } catch {
+        const body = await req.clone().text();
+        const saved = await saveQueue({ url: req.url, body, headers: [...req.headers], method: 'POST' });
+        return new Response(JSON.stringify({ queued:true }), { status: 202, headers:{ 'Content-Type':'application/json' }});
+      }
+    })());
+  }
+});
+
+self.addEventListener('sync', (e)=>{
+  if (e.tag === 'replay-queue') e.waitUntil(replayQueue());
+});
+
+async function saveQueue(item){
+  const list = JSON.parse(await caches.match('queue')?.then(r=>r?.text()||'[]').catch(()=> '[]') || '[]');
+  list.push({ ...item, ts: Date.now() });
+  const res = new Response(JSON.stringify(list));
+  await caches.open('q').then(c=>c.put('queue', res));
+}
+async function replayQueue(){
+  const cache = await caches.open('q');
+  const r = await cache.match('queue'); if(!r) return;
+  const list = JSON.parse(await r.text());
+  const left = [];
+  for (const it of list){
+    try {
+      await fetch(it.url, { method:'POST', body: it.body, headers: it.headers });
+    } catch { left.push(it); }
+  }
+  await cache.put('queue', new Response(JSON.stringify(left)));
+}
+self.addEventListener('online', ()=> self.registration.sync.register('replay-queue'));
+
+
+Now your POSTs (e.g., mood logs, study state saves) will queue offline and sync later.
+
+5) Voice Commands (Web Speech API)
+// frontend/components/VoiceCommand.tsx
+'use client';
+import { useEffect, useRef, useState } from 'react';
+
+export default function VoiceCommand({ onCommand }:{ onCommand:(text:string)=>void }){
+  const [ok,setOk]=useState(false);
+  const recogRef = useRef<any>(null);
+
+  useEffect(()=>{
+    const SR:any = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (!SR) return;
+    const rec = new SR(); rec.lang = 'en-ZA'; rec.continuous = false; rec.interimResults = false;
+    rec.onresult = (e:any)=> onCommand(e.results[0][0].transcript);
+    rec.onerror = ()=>{};
+    recogRef.current = rec; setOk(true);
+  },[onCommand]);
+
+  if(!ok) return null;
+  return <button className="px-3 py-2 rounded bg-gray-800 text-white" onClick={()=>recogRef.current.start()}>🎙️ Speak</button>
+}
+
+6) Exam Mode (Fullscreen + focus/clipboard guard)
+// frontend/app/exam/[id]/page.tsx
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function ExamPage({ params }: any){
+  const [started,setStarted]=useState(false);
+  const [violations,setViolations]=useState(0);
+
+  useEffect(()=>{
+    function onBlur(){ if(started){ setViolations(v=>v+1); } }
+    function blockCopy(e:any){ if(started){ e.preventDefault(); } }
+    document.addEventListener('visibilitychange', onBlur);
+    document.addEventListener('copy', blockCopy);
+    document.addEventListener('paste', blockCopy);
+    return ()=>{ document.removeEventListener('visibilitychange', onBlur); document.removeEventListener('copy', blockCopy); document.removeEventListener('paste', blockCopy); }
+  },[started]);
+
+  async function start(){
+    await document.documentElement.requestFullscreen();
+    setStarted(true);
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      {!started ? (
+        <button onClick={start} className="bg-red-600 text-white px-4 py-2 rounded">Start Exam (Fullscreen)</button>
+      ):(
+        <div>
+          <div className="text-sm text-gray-500">Focus violations: {violations}</div>
+          {/* render your timed test UI here */}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+Note: You can’t fully “lock” a browser tab like kiosk software, but this adds fullscreen, focus tracking, and copy/paste blocks.
+
+7) Multi-Device Sync (Frontend hook)
+// frontend/hooks/useStudyState.ts
+'use client';
+import { useEffect, useRef } from 'react';
+
+export function useStudyState(subject: string, resourceId: string, position: number){
+  const token = typeof window!=='undefined'?localStorage.getItem('token'):'';
+  const latest = useRef({ subject, resourceId, position });
+
+  useEffect(()=>{
+    const t = setInterval(async ()=>{
+      const body = { ...latest.current };
+      await fetch('/api/study-state', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) });
+    }, 5000);
+    return ()=> clearInterval(t);
+  },[token]);
+}
+
+8) Shared Whiteboard (Socket.io + Canvas)
+// frontend/app/groups/[id]/whiteboard/page.tsx
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
+
+export default function Whiteboard({ params }: any){
+  const { id } = params;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [socket,setSocket]=useState<any>(null);
+
+  useEffect(()=>{
+    const s = io('/whiteboard');
+    s.emit('join', { roomId: id });
+    s.on('draw', ({ stroke })=> drawStroke(stroke));
+    s.on('clear', ()=> clearCanvas());
+    setSocket(s);
+    return ()=> s.disconnect();
+  },[id]);
+
+  function drawStroke(stroke:any){
+    const ctx = canvasRef.current!.getContext('2d')!;
+    ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(stroke.from.x, stroke.from.y); ctx.lineTo(stroke.to.x, stroke.to.y); ctx.stroke();
+  }
+  function clearCanvas(){ const c=canvasRef.current!; const ctx=c.getContext('2d')!; ctx.clearRect(0,0,c.width,c.height); }
+
+  function onDraw(e:any){
+    if(!socket) return;
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    if((e.buttons & 1)===1){
+      const stroke = { from: {x:pos.x-1, y:pos.y-1}, to: pos };
+      drawStroke(stroke);
+      socket.emit('draw', { roomId: id, stroke });
+    }
+  }
+
+  return (
+    <div className="p-4">
+      <div className="flex gap-2 mb-2">
+        <button onClick={()=>{ socket.emit('clear',{roomId:id}); clearCanvas(); }} className="px-3 py-2 bg-gray-200 rounded">Clear</button>
+      </div>
+      <canvas ref={canvasRef} onMouseMove={onDraw} width={900} height={600} className="border rounded"/>
+    </div>
+  );
+}
+
+9) Mini Podcasts (record, upload, play)
+// frontend/app/podcasts/page.tsx
+'use client';
+import { useEffect, useRef, useState } from 'react';
+
+export default function Podcasts(){
+  const token = typeof window!=='undefined'?localStorage.getItem('token'):'';
+  const [list,setList]=useState<any[]>([]);
+  const [title,setTitle]=useState('');
+  const chunksRef = useRef<BlobPart[]>([]);
+  const mediaRef = useRef<MediaRecorder|null>(null);
+
+  async function load(){ const r=await fetch('/api/podcasts',{headers:{Authorization:`Bearer ${token}`}}); setList(await r.json()); }
+  useEffect(()=>{ load(); },[]);
+
+  async function startRec(){
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const rec = new MediaRecorder(stream);
+    rec.ondataavailable = e=> chunksRef.current.push(e.data);
+    rec.onstop = async ()=>{
+      const blob = new Blob(chunksRef.current, { type:'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      // In production upload to S3; here, quick-and-dirty: convert to base64 and save as data URL
+      const reader = new FileReader();
+      reader.onloadend = async ()=>{
+        const b64 = String(reader.result);
+        const r = await fetch('/api/podcasts', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ title, audioUrl: b64, durationSec: 0 }) });
+        await r.json(); chunksRef.current=[]; setTitle(''); load();
+      };
+      reader.readAsDataURL(blob);
+    };
+    mediaRef.current = rec; rec.start();
+  }
+  function stopRec(){ mediaRef.current?.stop(); }
+
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Mini Podcasts</h1>
+      <input className="border px-3 py-2 rounded w-full" placeholder="Episode title" value={title} onChange={e=>setTitle(e.target.value)} />
+      <div className="flex gap-2">
+        <button onClick={startRec} className="bg-gray-800 text-white px-4 py-2 rounded">Record</button>
+        <button onClick={stopRec} className="bg-gray-200 px-4 py-2 rounded">Stop & Save</button>
+      </div>
+      <div className="space-y-2">
+        {list.map(p=>(
+          <div key={p._id} className="border rounded p-3">
+            <div className="font-semibold">{p.title}</div>
+            <audio controls src={p.audioUrl} className="w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+10) Revision Playlists (simple create + browse)
+// frontend/app/playlists/page.tsx
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function Playlists(){
+  const token = typeof window!=='undefined'?localStorage.getItem('token'):'';
+  const [mine,setMine]=useState<any[]>([]);
+  const [pub,setPub]=useState<any[]>([]);
+  const [title,setTitle]=useState('');
+  const [item,setItem]=useState({ kind:'link', title:'', url:'' }); const [items,setItems]=useState<any[]>([]);
+  const [isPublic,setIsPublic]=useState(false);
+
+  async function load(){
+    const r1 = await fetch('/api/playlists/mine',{headers:{Authorization:`Bearer ${token}`}}); setMine(await r1.json());
+    const r2 = await fetch('/api/playlists/public'); setPub(await r2.json());
+  }
+  useEffect(()=>{ load(); },[]);
+
+  async function save(){
+    await fetch('/api/playlists', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ title, items, public: isPublic }) });
+    setTitle(''); setItems([]); load();
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto p-6 grid md:grid-cols-2 gap-6">
+      <div>
+        <h2 className="text-xl font-bold">Create Playlist</h2>
+        <input className="border px-3 py-2 rounded w-full" placeholder="Playlist title" value={title} onChange={e=>setTitle(e.target.value)} />
+        <div className="flex gap-2 mt-2">
+          <select className="border px-3 py-2 rounded" value={item.kind} onChange={e=>setItem({...item,kind:e.target.value})}>
+            <option>link</option><option>pdf</option><option>video</option><option>podcast</option>
+          </select>
+          <input className="border px-3 py-2 rounded w-full" placeholder="Item title" onChange={e=>setItem({...item,title:e.target.value})}/>
+          <input className="border px-3 py-2 rounded w-full" placeholder="URL" onChange={e=>setItem({...item,url:e.target.value})}/>
+          <button className="bg-gray-800 text-white px-3 rounded" onClick={()=>setItems([...items,item])}>Add</button>
+        </div>
+        <label className="flex items-center gap-2 mt-2"><input type="checkbox" checked={isPublic} onChange={e=>setIsPublic(e.target.checked)} /> Public</label>
+        <button onClick={save} className="mt-3 bg-indigo-600 text-white px-4 py-2 rounded">Save Playlist</button>
+        <div className="text-sm mt-2 text-gray-600">Items: {items.length}</div>
+      </div>
+      <div>
+        <h2 className="text-xl font-bold">Explore</h2>
+        <div className="space-y-3">
+          {pub.map((p:any)=>(
+            <div key={p._id} className="border rounded p-3">
+              <div className="font-semibold">{p.title}</div>
+              <ul className="list-disc ml-5">{p.items.map((it:any,i:number)=>(<li key={i}><a className="underline" href={it.url} target="_blank">{it.title}</a> <span className="text-xs">({it.kind})</span></li>))}</ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+11) Mood Tracker (daily)
+// frontend/app/mood/page.tsx
+'use client';
+import { useEffect, useState } from 'react';
+const MOODS = ['🙂','😐','☹️','😫','😎','🥱'];
+
+export default function MoodPage(){
+  const token = typeof window!=='undefined'?localStorage.getItem('token'):'';
+  const [today,setToday]=useState(new Date().toISOString().slice(0,10));
+  const [mood,setMood]=useState('🙂'); const [note,setNote]=useState(''); const [history,setHistory]=useState<any[]>([]);
+
+  async function load(){
+    const r = await fetch('/api/mood/mine', { headers:{ Authorization:`Bearer ${token}` }});
+    setHistory(await r.json());
+  }
+  useEffect(()=>{ load(); },[]);
+
+  async function save(){
+    await fetch('/api/mood/log', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ mood, note, date: today }) });
+    setNote(''); load();
+  }
+
+  return (
+    <div className="max-w-xl mx-auto p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Mood Tracker</h1>
+      <div className="flex gap-2">
+        {MOODS.map(m=>(<button key={m} onClick={()=>setMood(m)} className={`px-3 py-2 rounded border ${m===mood?'bg-yellow-100':''}`}>{m}</button>))}
+      </div>
+      <textarea className="border px-3 py-2 rounded w-full" placeholder="Optional note…" value={note} onChange={e=>setNote(e.target.value)} />
+      <button onClick={save} className="bg-indigo-600 text-white px-4 py-2 rounded">Save today</button>
+
+      <div>
+        <h2 className="font-semibold mt-4">Your recent logs</h2>
+        <ul className="text-sm">{history.map((h:any)=>(<li key={h._id}>{h.date} – {h.mood} {h.note? `• ${h.note}`:''}</li>))}</ul>
+      </div>
+    </div>
+  );
+}

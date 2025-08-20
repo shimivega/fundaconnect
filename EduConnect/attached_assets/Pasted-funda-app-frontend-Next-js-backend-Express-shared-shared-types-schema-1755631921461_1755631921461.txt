@@ -1,0 +1,379 @@
+funda-app/
+  frontend/    # Next.js
+  backend/     # Express
+  shared/      # shared types/schemas if needed
+🔐 Auth & Roles
+Signup fields: name, surname, email, phone, password, confirmPassword, school, province, role (learner | teacher | abet), grade (only for learners).
+
+Password visibility toggle.
+
+All 9 South African provinces (enum):
+
+Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape
+
+Hidden admin login: email=admin, password=admin123 (not shown in UI).
+
+Teachers created with status: "pending" until admin approval; learners/abet default to approved.
+
+🧑‍🏫 Teacher Features (after approval)
+Create classrooms.
+
+Upload PDFs, videos, images, textbooks (multer).
+
+Contribute Practice Zone questions (per grade + subject; MCQ + essay).
+
+Create timed tests; learners write simultaneously; teacher marks and posts scores.
+
+Add teachers as friends, private chat (Socket.IO).
+
+👩‍🎓 Learner Features
+Join classrooms, take practice & timed tests, view results.
+
+📡 Key Backend Routes
+POST /api/auth/signup | POST /api/auth/login
+
+GET /api/admin/teachers/pending (admin)
+
+PATCH /api/admin/teachers/:id/approve (admin; body { approved: true|false })
+
+POST /api/classrooms (teacher, approved)
+
+POST /api/uploads (teacher/admin; multer for pdf/mp4/jpg/png)
+
+POST /api/practice/add (teacher/admin)
+
+GET /api/practice/:grade/:subject
+
+POST /api/tests/create | POST /api/tests/submit | GET /api/tests/results/:id
+
+POST /api/teachers/friends/:id (teacher ↔ teacher add)
+
+GET /api/teachers/friends | Socket.IO /ws for direct messages
+
+🛠️ Env & Deploy
+.env (backend): MONGO_URI, JWT_SECRET, CLIENT_URL
+
+.env.local (frontend): NEXT_PUBLIC_API_URL
+
+Deploy: Vercel (frontend) + Render/Railway/Replit (backend)
+
+⛳ Implement these files
+backend/models/User.js
+js
+Copy
+Edit
+const mongoose = require('mongoose');
+
+const PROVINCES = [
+  'Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo',
+  'Mpumalanga','Northern Cape','North West','Western Cape'
+];
+
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  surname: { type: String, required: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  phone: { type: String, required: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['learner','teacher','abet','admin'], required: true, default: 'learner' },
+  grade: { type: Number, min: 1, max: 12 }, // required only for learners (validated below)
+  school: { type: String, required: true },
+  province: { type: String, enum: PROVINCES, required: true },
+  status: { type: String, enum: ['pending','approved','rejected'], default: 'approved' }, // teachers -> pending
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+}, { timestamps: true });
+
+userSchema.pre('save', function(next) {
+  if (this.role === 'teacher' && !this.status) this.status = 'pending';
+  if (this.role !== 'teacher' && !this.status) this.status = 'approved';
+  next();
+});
+
+userSchema.path('grade').validate(function(value) {
+  if (this.role === 'learner') return value !== undefined && value !== null;
+  return true; // not required for teacher/abet/admin
+}, 'Grade is required for learners');
+
+module.exports = mongoose.model('User', userSchema);
+module.exports.PROVINCES = PROVINCES;
+backend/routes/auth.js
+js
+Copy
+Edit
+const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { PROVINCES } = require('../models/User');
+const User = require('../models/User');
+const router = express.Router();
+
+const signToken = (payload) => jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+// POST /api/auth/signup
+router.post('/signup', async (req, res) => {
+  try {
+    const { name, surname, email, phone, password, confirmPassword, school, province, role, grade } = req.body;
+
+    // Basic validations
+    if (!name || !surname || !email || !phone || !password || !confirmPassword || !school || !province || !role) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match' });
+    if (!PROVINCES.includes(province)) return res.status(400).json({ message: 'Invalid province' });
+    if (!['learner','teacher','abet'].includes(role)) return res.status(400).json({ message: 'Invalid role' });
+    if (role === 'learner' && (grade === undefined || grade === null)) {
+      return res.status(400).json({ message: 'Grade is required for learners' });
+    }
+
+    const exists = await User.findOne({ email: email.toLowerCase() });
+    if (exists) return res.status(400).json({ message: 'User already exists' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const status = role === 'teacher' ? 'pending' : 'approved';
+
+    const user = await User.create({
+      name, surname, email: email.toLowerCase(), phone, password: hashed,
+      role, grade: role === 'learner' ? grade : undefined, school, province, status
+    });
+
+    const token = signToken({ id: user._id, role: user.role, status: user.status });
+    res.status(201).json({ token, user });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Signup failed' });
+  }
+});
+
+// POST /api/auth/login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Hidden admin login
+    if (email === 'admin' && password === 'admin123') {
+      const token = signToken({ id: 'admin', role: 'admin', status: 'approved' });
+      return res.json({ token, user: { name: 'Admin', surname: '', role: 'admin', status: 'approved' } });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(400).json({ message: 'User not found' });
+
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const token = signToken({ id: user._id, role: user.role, status: user.status });
+    res.json({ token, user });
+  } catch {
+    res.status(500).json({ message: 'Login failed' });
+  }
+});
+
+module.exports = router;
+backend/middleware/auth.js
+js
+Copy
+Edit
+const jwt = require('jsonwebtoken');
+
+const auth = (req, res, next) => {
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if (!token) return res.status(401).json({ message: 'No token' });
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+const requireRoles = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) return res.status(403).json({ message: 'Forbidden' });
+  next();
+};
+
+const requireTeacherApproved = (req, res, next) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ message: 'Teacher only' });
+  if (req.user.status !== 'approved') return res.status(403).json({ message: 'Teacher not approved' });
+  next();
+};
+
+module.exports = { auth, requireRoles, requireTeacherApproved };
+backend/routes/admin.js
+js
+Copy
+Edit
+const express = require('express');
+const User = require('../models/User');
+const { auth, requireRoles } = require('../middleware/auth');
+const router = express.Router();
+
+router.use(auth, requireRoles('admin'));
+
+router.get('/teachers/pending', async (_req, res) => {
+  const pending = await User.find({ role: 'teacher', status: 'pending' }).select('-password');
+  res.json(pending);
+});
+
+router.patch('/teachers/:id/approve', async (req, res) => {
+  const { approved } = req.body; // true or false
+  const status = approved ? 'approved' : 'rejected';
+  const updated = await User.findByIdAndUpdate(req.params.id, { status }, { new: true }).select('-password');
+  if (!updated) return res.status(404).json({ message: 'Teacher not found' });
+  res.json(updated);
+});
+
+module.exports = router;
+frontend/app/auth/page.tsx (Next.js w/ Tailwind + shadcn/ui)
+tsx
+Copy
+Edit
+'use client';
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+
+const PROVINCES = [
+  'Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo',
+  'Mpumalanga','Northern Cape','North West','Western Cape'
+];
+
+type Role = 'learner' | 'teacher' | 'abet';
+
+export default function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [showPwd, setShowPwd] = useState(false);
+  const [form, setForm] = useState<any>({
+    name:'', surname:'', email:'', phone:'', password:'', confirmPassword:'',
+    school:'', province:'', role:'learner' as Role, grade: ''
+  });
+
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm((f:any) => ({ ...f, [name]: value }));
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const url = `${API}/auth/${isLogin ? 'login' : 'signup'}`;
+    const payload = isLogin
+      ? { email: form.email, password: form.password }
+      : {
+          name: form.name, surname: form.surname, email: form.email, phone: form.phone,
+          password: form.password, confirmPassword: form.confirmPassword,
+          school: form.school, province: form.province, role: form.role,
+          grade: form.role === 'learner' ? Number(form.grade) : undefined
+        };
+
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) return alert(data?.message || 'Failed');
+    localStorage.setItem('token', data.token);
+    // Redirect by role
+    if (data.user?.role === 'admin') window.location.href = '/admin';
+    else if (data.user?.role === 'teacher') window.location.href = '/teacher-dashboard';
+    else window.location.href = '/dashboard';
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-6">
+      <form onSubmit={onSubmit} className="w-full max-w-xl bg-white rounded-2xl shadow p-6 space-y-4">
+        <h1 className="text-2xl font-bold">{isLogin ? 'Sign in to Funda-App' : 'Create your Funda-App account'}</h1>
+
+        {!isLogin && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input className="input input-bordered p-3 rounded-lg border" placeholder="Name" name="name" onChange={onChange} required />
+              <input className="input input-bordered p-3 rounded-lg border" placeholder="Surname" name="surname" onChange={onChange} required />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input className="input input-bordered p-3 rounded-lg border" placeholder="Phone" name="phone" onChange={onChange} required />
+              <input className="input input-bordered p-3 rounded-lg border" placeholder="School" name="school" onChange={onChange} required />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select className="p-3 rounded-lg border" name="province" value={form.province} onChange={onChange} required>
+                <option value="">Select Province</option>
+                {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <select className="p-3 rounded-lg border" name="role" value={form.role} onChange={onChange} required>
+                <option value="learner">Learner</option>
+                <option value="teacher">Teacher</option>
+                <option value="abet">ABET</option>
+              </select>
+            </div>
+            {form.role === 'learner' && (
+              <select className="p-3 rounded-lg border w-full" name="grade" value={form.grade} onChange={onChange} required>
+                <option value="">Select Grade</option>
+                {Array.from({length:12}, (_,i)=>i+1).map(g => <option key={g} value={g}>{`Grade ${g}`}</option>)}
+              </select>
+            )}
+          </>
+        )}
+
+        <input className="input input-bordered p-3 rounded-lg border w-full" type="email" placeholder="Email" name="email" onChange={onChange} required />
+        <div className="relative">
+          <input className="input input-bordered p-3 rounded-lg border w-full pr-10"
+                 type={showPwd ? 'text' : 'password'} placeholder="Password" name="password" onChange={onChange} required />
+          <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2" onClick={()=>setShowPwd(s=>!s)}>
+            {showPwd ? <EyeOff size={18}/> : <Eye size={18}/>}
+          </button>
+        </div>
+        {!isLogin && (
+          <input className="input input-bordered p-3 rounded-lg border w-full" type={showPwd ? 'text' : 'password'}
+                 placeholder="Confirm Password" name="confirmPassword" onChange={onChange} required />
+        )}
+
+        <button className="w-full py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
+          {isLogin ? 'Sign In' : 'Create Account'}
+        </button>
+
+        <p className="text-sm text-slate-600">
+          {isLogin ? 'No account?' : 'Already have an account?'}{' '}
+          <button type="button" onClick={()=>setIsLogin(v=>!v)} className="text-indigo-600 underline">
+            {isLogin ? 'Register' : 'Sign in'}
+          </button>
+        </p>
+      </form>
+    </div>
+  );
+}
+backend/server.js (wire routes + Socket.IO)
+js
+Copy
+Edit
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+dotenv.config();
+
+const app = express();
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(server, { cors: { origin: '*', methods: ['GET','POST','PATCH'] } });
+
+app.use(cors());
+app.use(express.json());
+app.set('io', io);
+
+mongoose.connect(process.env.MONGO_URI).then(()=>console.log('MongoDB connected')).catch(console.error);
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
+// TODO: add classrooms, uploads, practice, tests, teachers/friends routes
+
+// Static uploads
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Sockets
+io.on('connection', (socket) => {
+  socket.on('dm', ({ to, message }) => io.to(to).emit('dm', { from: socket.id, message }));
+  socket.on('join', (room) => socket.join(room));
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`API on http://localhost:${PORT}`))

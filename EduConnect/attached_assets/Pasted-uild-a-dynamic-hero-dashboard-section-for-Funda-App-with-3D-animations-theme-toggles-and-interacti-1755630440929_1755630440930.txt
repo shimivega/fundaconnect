@@ -1,0 +1,110 @@
+uild a dynamic hero/dashboard section for Funda-App with 3D animations, theme toggles, and interactive UI. Use Next.js (frontend) + TailwindCSS + React Three Fiber / Three.js for 3D. Backend (Express + MongoDB) already exists — you’re only focusing on the frontend UI enhancements.
+
+Features to Implement
+1. 3D Floating Dashboard Icons
+
+Icons: Practice Zone, Games Zone, Study Group, Classroom, AI Assistants, Support Center.
+
+Animation:
+
+Icons float up & down in 3D space with slow rotation.
+
+On hover: icon pops forward, rotates faster, shows stronger shadow.
+
+Implementation: Use react-three-fiber (Three.js for React). Place each icon as a 3D mesh or GLTF model.
+
+2. Dynamic Theme Toggle (4 Themes)
+
+Toggle placement: Navigation bar or user settings.
+
+Themes:
+
+Default (light) → white / gray backgrounds
+
+Dark → black / dark gray backgrounds
+
+Vibrant → bold, saturated accents (blue, green, orange)
+
+Soft → pastel blues/greens/browns
+
+Behavior:
+
+Smooth animated transition when switching themes.
+
+Save selected theme in localStorage so it persists.
+
+Implementation: TailwindCSS theme variants with class toggle (e.g., data-theme="dark").
+
+3. 3D Animated Logo Intro
+
+Logo: Cartoon-style mascot for Funda-App (simple shape, placeholder OK).
+
+Intro animation:
+
+On first load, logo runs/jumps/flies into the screen.
+
+After animation, logo settles at top of hero section.
+
+Implementation: react-three-fiber with GSAP or Drei’s animation helpers.
+
+Performance: Should be lightweight, non-blocking, <2s.
+
+Example Code (Floating 3D Icon in Three.js)
+import { Canvas } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
+import { Mesh } from 'three'
+import { useRef } from 'react'
+
+function FloatingIcon() {
+  const ref = useRef<Mesh>(null!)
+  useFrame(() => {
+    ref.current.position.y = Math.sin(Date.now() * 0.001) * 0.2
+    ref.current.rotation.y += 0.01
+  })
+  return (
+    <mesh ref={ref}>
+      <boxGeometry args={[1,1,1]} />
+      <meshStandardMaterial color="orange" />
+    </mesh>
+  )
+}
+
+export default function Hero() {
+  return (
+    <Canvas>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[2,2,2]} />
+      <FloatingIcon />
+    </Canvas>
+  )
+}
+
+South African Context (for resources links inside dashboard)
+
+DBE LTSM (workbooks, study guides): https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials(LTSM).aspx
+
+Siyavula (Maths & Science): https://www.siyavula.com/read
+
+WorksheetCloud (practice): https://www.worksheetcloud.com/
+
+Teacha! Resources: https://www.teacharesources.com/
+
+SchoolNet SA: https://www.schoolnet.org.za/homepage/teacher-resources/south-african-curriculum-resources/
+
+Via Afrika free guides: https://viaafrika.com/free-downloads/
+
+ABET resources: https://abet.co.za/
+
+Integrate links into dashboard cards if possible.
+
+Deliverables
+
+Next.js component: HeroSection.tsx
+
+3D animated floating dashboard icons (hover effects included).
+
+Theme toggle with 4 color schemes (persistent).
+
+Animated logo intro.
+
+Responsive (desktop + mobile).

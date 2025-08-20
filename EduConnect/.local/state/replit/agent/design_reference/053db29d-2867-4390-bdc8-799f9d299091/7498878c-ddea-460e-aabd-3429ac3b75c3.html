@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funda-App - Educational Platform for South Africa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#7C3AED',
+                        success: '#059669',
+                        warning: '#D97706',
+                        danger: '#DC2626',
+                        'sa-gold': '#FFD700',
+                        'sa-green': '#007749',
+                        'sa-blue': '#002395'
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out infinite 2s',
+                        'float-slow': 'float 8s ease-in-out infinite 1s',
+                        'bounce-gentle': 'bounce-gentle 2s infinite',
+                        'fade-in': 'fadeIn 0.8s ease-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'scale-in': 'scaleIn 0.5s ease-out'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
+            50% { transform: translateY(-20px) rotateX(5deg) rotateY(5deg); }
+        }
+        
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .theme-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+        
+        .card-3d:hover {
+            transform: translateZ(20px) rotateX(5deg) rotateY(5deg);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Theme Variables */
+        .theme-default {
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F8FAFC;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --accent: #2563EB;
+        }
+        
+        .theme-dark {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --accent: #3B82F6;
+        }
+        
+        .theme-vibrant {
+            --bg-primary: #FFF5F5;
+            --bg-secondary: #FED7D7;
+            --text-primary: #2D3748;
+            --text-secondary: #4A5568;
+            --accent: #E53E3E;
+        }
+        
+        .theme-soft {
+            --bg-primary: #FAF0E6;
+            --bg-secondary: #E6F3FF;
+            --text-primary: #2D3748;
+            --text-secondary: #4A5568;
+            --accent: #805AD5;
+        }
+        
+        .themed-bg { background-color: var(--bg-primary); }
+        .themed-bg-secondary { background-color: var(--bg-secondary); }
+        .themed-text { color: var(--text-primary); }
+        .themed-text-secondary { color: var(--text-secondary); }
+        .themed-accent { color: var(--accent); }
+    </style>
+</head>
+
+<body class="theme-default theme-transition themed-bg themed-text min-h-screen">
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 themed-bg-secondary shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center animate-bounce-gentle">
+                        <i data-lucide="graduation-cap" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold themed-text">Funda-App</h1>
+                        <p class="text-xs themed-text-secondary">Educational Platform for SA</p>
+                    </div>
+                </div>
+                
+                <!-- Theme Switcher -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex space-x-2">
+                        <button onclick="switchTheme('default')" class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full hover:scale-110 transition-transform" title="Default Theme"></button>
+                        <button onclick="switchTheme('dark')" class="w-6 h-6 bg-gray-900 border-2 border-gray-600 rounded-full hover:scale-110 transition-transform" title="Dark Theme"></button>
+                        <button onclick="switchTheme('vibrant')" class="w-6 h-6 bg-gradient-to-r from-red-400 to-pink-400 border-2 border-red-300 rounded-full hover:scale-110 transition-transform" title="Vibrant Theme"></button>
+                        <button onclick="switchTheme('soft')" class="w-6 h-6 bg-gradient-to-r from-purple-300 to-blue-300 border-2 border-purple-200 rounded-full hover:scale-110 transition-transform" title="Soft Theme"></button>
+                    </div>
+                    
+                    <!-- Language Selector -->
+                    <select class="bg-transparent themed-text border border-gray-300 rounded-lg px-3 py-1 text-sm">
+                        <option value="en">English</option>
+                        <option value="zu">isiZulu</option>
+                        <option value="af">Afrikaans</option>
+                        <option value="xh">isiXhosa</option>
+                        <option value="st">Sesotho</option>
+                        <option value="tn">Setswana</option>
+                        <option value="ss">siSwati</option>
+                        <option value="ve">Tshivenda</option>
+                        <option value="ts">Xitsonga</option>
+                        <option value="nr">isiNdebele</option>
+                        <option value="nso">Sepedi</option>
+                    </select>
+                    
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-3">
+                        <button class="themed-text-secondary hover:themed-accent transition-colors">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
+                        </button>
+                        <button class="flex items-center space-x-2 themed-text hover:themed-accent transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">JD</span>
+                            </div>
+                            <span class="text-sm font-medium hidden sm:block">John Doe</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with 3D Logo Animation -->
+    <section class="relative py-20 overflow-hidden">
+        <!-- Animated background pattern for South African colors -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-10 left-10 w-32 h-32 bg-sa-gold rounded-full animate-float"></div>
+            <div class="absolute top-32 right-20 w-24 h-24 bg-sa-green rounded-full animate-float-delayed"></div>
+            <div class="absolute bottom-20 left-1/3 w-40 h-40 bg-sa-blue rounded-full animate-float-slow"></div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <!-- 3D Animated Logo -->
+            <div class="mb-8 perspective-1000">
+                <div class="inline-block animate-scale-in">
+                    <div class="w-32 h-32 mx-auto bg-gradient-to-br from-primary via-secondary to-success rounded-3xl card-3d shadow-2xl flex items-center justify-center mb-6">
+                        <i data-lucide="book-open" class="w-16 h-16 text-white"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-bold themed-text mb-6 animate-fade-in">
+                Welcome to <span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Funda-App</span>
+            </h1>
+            <p class="text-xl md:text-2xl themed-text-secondary mb-8 max-w-3xl mx-auto animate-slide-up">
+                Empowering South African learners with innovative educational technology, multilingual support, and collaborative learning experiences.
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up">
+                <button class="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 rounded-xl font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                    Start Learning Today
+                </button>
+                <button class="border-2 border-primary themed-text px-8 py-4 rounded-xl font-semibold hover:bg-primary hover:text-white transition-all duration-300">
+                    Watch Demo Video
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3D Floating Dashboard Icons -->
+    <section class="py-20 themed-bg-secondary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold themed-text mb-4">Explore Learning Zones</h2>
+                <p class="text-xl themed-text-secondary">Interactive 3D dashboard with all your educational tools</p>
+            </div>
+            
+            <!-- 3D Grid of Dashboard Icons -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Practice Zone -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="brain" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">Practice Zone</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Master concepts with interactive quizzes and exercises</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">MCQs</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full">Essays</span>
+                    </div>
+                </div>
+                
+                <!-- Games Zone -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float-delayed text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="gamepad-2" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">Games Zone</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Learn through fun educational games and challenges</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Math Quiz</span>
+                        <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded-full">Word Search</span>
+                    </div>
+                </div>
+                
+                <!-- Study Groups -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float-slow text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="users" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">Study Groups</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Collaborate with peers in real-time chat groups</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full">Chat</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Video Calls</span>
+                    </div>
+                </div>
+                
+                <!-- Classroom -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="school" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">Classroom</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Access virtual classrooms and live lessons</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full">Live Stream</span>
+                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full">Assignments</span>
+                    </div>
+                </div>
+                
+                <!-- AI Assistants -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float-delayed text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="bot" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">AI Assistants</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Get personalized help from safe AI tutors</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">Safe Chat</span>
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Homework Help</span>
+                    </div>
+                </div>
+                
+                <!-- Support Center -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="headphones" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">Support Center</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Get help, report issues, and access wellness resources</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-rose-100 text-rose-800 px-2 py-1 rounded-full">Help Desk</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Wellness</span>
+                    </div>
+                </div>
+                
+                <!-- Educational Videos -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float-slow text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="play-circle" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">Educational Videos</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Watch curated educational content by grade level</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-teal-100 text-teal-800 px-2 py-1 rounded-full">Grade 1-12</span>
+                        <span class="bg-cyan-100 text-cyan-800 px-2 py-1 rounded-full">ABET</span>
+                    </div>
+                </div>
+                
+                <!-- Contact -->
+                <div class="card-3d themed-bg rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300 animate-float-delayed text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="mail" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold themed-text mb-2">Contact</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Connect with us for support and partnerships</p>
+                    <div class="flex items-center justify-center space-x-2 text-xs themed-text-secondary">
+                        <span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">Live Chat</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full">Meetings</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Educational Videos Gallery -->
+    <section class="py-20 themed-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold themed-text mb-4">Educational Video Library</h2>
+                <p class="text-xl themed-text-secondary">Curated content aligned with South African curriculum</p>
+            </div>
+            
+            <!-- Grade Level Tabs -->
+            <div class="flex flex-wrap justify-center mb-8 space-x-2">
+                <button class="bg-primary text-white px-4 py-2 rounded-lg mb-2 hover:bg-primary/90 transition-colors">Foundation Phase</button>
+                <button class="themed-bg-secondary themed-text px-4 py-2 rounded-lg mb-2 hover:bg-gray-100 transition-colors">Intermediate Phase</button>
+                <button class="themed-bg-secondary themed-text px-4 py-2 rounded-lg mb-2 hover:bg-gray-100 transition-colors">Senior Phase</button>
+                <button class="themed-bg-secondary themed-text px-4 py-2 rounded-lg mb-2 hover:bg-gray-100 transition-colors">FET Phase</button>
+                <button class="themed-bg-secondary themed-text px-4 py-2 rounded-lg mb-2 hover:bg-gray-100 transition-colors">ABET</button>
+            </div>
+            
+            <!-- Video Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Afrikaans Basics -->
+                <div class="themed-bg rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Beautiful diverse South African students learning -->
+                    <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=450" alt="South African students learning Afrikaans" class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold themed-text mb-2">Afrikaans Basics</h3>
+                        <p class="themed-text-secondary text-sm mb-4">Foundation Phase | 15 minutes</p>
+                        <p class="themed-text-secondary mb-4">Learn basic Afrikaans words and phrases with interactive exercises.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Grade 1-3</span>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i>Watch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grade 1 Addition -->
+                <div class="themed-bg rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Mathematical concepts visualization -->
+                    <img src="https://images.unsplash.com/photo-1632571401005-458e9d244591?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=450" alt="Mathematical concepts and number learning" class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold themed-text mb-2">Grade 1 Addition Fun</h3>
+                        <p class="themed-text-secondary text-sm mb-4">Foundation Phase | 12 minutes</p>
+                        <p class="themed-text-secondary mb-4">Colorful introduction to addition with counting and visual aids.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Grade 1</span>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i>Watch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mental Math Tricks -->
+                <div class="themed-bg rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Educational technology students -->
+                    <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=450" alt="Students using educational technology for mathematics" class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold themed-text mb-2">Mental Math Tricks</h3>
+                        <p class="themed-text-secondary text-sm mb-4">Intermediate Phase | 20 minutes</p>
+                        <p class="themed-text-secondary mb-4">Learn quick calculation techniques for faster problem solving.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Grade 4-6</span>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i>Watch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Photosynthesis Quiz -->
+                <div class="themed-bg rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Science experiments with kids -->
+                    <img src="https://images.unsplash.com/photo-1628258334105-2a0b3d6efee1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=450" alt="Children conducting science experiments with plants" class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold themed-text mb-2">Photosynthesis Interactive Quiz</h3>
+                        <p class="themed-text-secondary text-sm mb-4">Senior Phase | 18 minutes</p>
+                        <p class="themed-text-secondary mb-4">Understand how plants make food through interactive experiments.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">Grade 7-9</span>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i>Watch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Telling Time -->
+                <div class="themed-bg rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Classroom activities diverse students -->
+                    <img src="https://images.unsplash.com/photo-1544717301-9cdcb1f5940f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=450" alt="Diverse students in classroom learning to tell time" class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold themed-text mb-2">Learning to Tell Time</h3>
+                        <p class="themed-text-secondary text-sm mb-4">Foundation Phase | 16 minutes</p>
+                        <p class="themed-text-secondary mb-4">Master reading analog and digital clocks with fun activities.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">Grade 2-3</span>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i>Watch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grade 12 Memo -->
+                <div class="themed-bg rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Teachers and students interaction -->
+                    <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=450" alt="Teacher helping students with exam preparation" class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold themed-text mb-2">Grade 12 Exam Prep</h3>
+                        <p class="themed-text-secondary text-sm mb-4">FET Phase | 45 minutes</p>
+                        <p class="themed-text-secondary mb-4">Comprehensive revision with memo discussions and exam strategies.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">Grade 12</span>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i>Watch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp-Style Chat Interface Demo -->
+    <section class="py-20 themed-bg-secondary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold themed-text mb-4">Study Group Chat</h2>
+                <p class="text-xl themed-text-secondary">Collaborate with peers in real-time WhatsApp-style groups</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+                    <!-- Chat Header -->
+                    <div class="bg-primary text-white p-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Grade 10 Mathematics</h3>
+                                <p class="text-sm opacity-80">12 members • 3 online</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 hover:bg-white/10 rounded-full">
+                                <i data-lucide="video" class="w-5 h-5"></i>
+                            </button>
+                            <button class="p-2 hover:bg-white/10 rounded-full">
+                                <i data-lucide="phone" class="w-5 h-5"></i>
+                            </button>
+                            <button class="p-2 hover:bg-white/10 rounded-full">
+                                <i data-lucide="more-vertical" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Messages -->
+                    <div class="h-96 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+                        <!-- Pinned Message -->
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <i data-lucide="pin" class="w-4 h-4 text-yellow-600"></i>
+                                <span class="text-sm font-medium text-yellow-800">Pinned by Ms. Johnson</span>
+                            </div>
+                            <p class="text-sm text-yellow-700">Test on Quadratic Equations tomorrow at 10:00 AM. Remember to bring calculators!</p>
+                        </div>
+                        
+                        <!-- Incoming Message -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                TM
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-white rounded-lg p-3 shadow-sm max-w-xs">
+                                    <p class="text-sm font-medium text-gray-900 mb-1">Thabo Mthembu</p>
+                                    <p class="text-gray-700">Can someone help me with question 3.2? I'm struggling with the discriminant.</p>
+                                    <p class="text-xs text-gray-500 mt-1">2:34 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Outgoing Message -->
+                        <div class="flex items-start space-x-3 justify-end">
+                            <div class="flex-1">
+                                <div class="bg-primary text-white rounded-lg p-3 shadow-sm max-w-xs ml-auto">
+                                    <p class="mb-2">Sure! Remember that the discriminant is b² - 4ac. Let me share a helpful video.</p>
+                                    <div class="bg-white/10 rounded-lg p-2 flex items-center space-x-2">
+                                        <i data-lucide="play-circle" class="w-4 h-4"></i>
+                                        <span class="text-sm">Quadratic Formula Explained.mp4</span>
+                                    </div>
+                                    <div class="flex items-center justify-end space-x-1 mt-2">
+                                        <p class="text-xs opacity-80">2:35 PM</p>
+                                        <i data-lucide="check-check" class="w-4 h-4 text-blue-200"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Voice Note -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                SK
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-white rounded-lg p-3 shadow-sm max-w-xs">
+                                    <p class="text-sm font-medium text-gray-900 mb-1">Sipho Khumalo</p>
+                                    <div class="flex items-center space-x-2 bg-green-50 rounded-lg p-2">
+                                        <button class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                            <i data-lucide="play" class="w-4 h-4 text-white"></i>
+                                        </button>
+                                        <div class="flex-1 h-2 bg-green-200 rounded-full">
+                                            <div class="h-full bg-green-500 rounded-full w-1/3"></div>
+                                        </div>
+                                        <span class="text-xs text-green-700">0:45</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">2:37 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Poll -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                MJ
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-white rounded-lg p-3 shadow-sm max-w-sm">
+                                    <p class="text-sm font-medium text-gray-900 mb-1">Ms. Johnson (Teacher)</p>
+                                    <div class="border border-purple-200 rounded-lg p-3 mb-2">
+                                        <h4 class="font-medium text-purple-800 mb-2 flex items-center">
+                                            <i data-lucide="bar-chart" class="w-4 h-4 mr-1"></i>
+                                            Quick Poll: Which topic needs more practice?
+                                        </h4>
+                                        <div class="space-y-2">
+                                            <div class="flex items-center justify-between bg-purple-50 rounded p-2">
+                                                <span class="text-sm">Quadratic Equations</span>
+                                                <span class="text-sm font-medium">60%</span>
+                                            </div>
+                                            <div class="flex items-center justify-between bg-blue-50 rounded p-2">
+                                                <span class="text-sm">Functions & Graphs</span>
+                                                <span class="text-sm font-medium">40%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500">2:40 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Input -->
+                    <div class="p-4 border-t bg-white dark:bg-gray-800">
+                        <div class="flex items-center space-x-3">
+                            <button class="p-2 text-gray-500 hover:text-primary transition-colors">
+                                <i data-lucide="paperclip" class="w-5 h-5"></i>
+                            </button>
+                            <button class="p-2 text-gray-500 hover:text-primary transition-colors">
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                            </button>
+                            <div class="flex-1 relative">
+                                <input type="text" placeholder="Type a message..." class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <button class="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-primary">
+                                    <i data-lucide="smile" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <button class="p-2 text-gray-500 hover:text-primary transition-colors">
+                                <i data-lucide="mic" class="w-5 h-5"></i>
+                            </button>
+                            <button class="bg-primary text-white p-3 rounded-full hover:bg-primary/90 transition-colors">
+                                <i data-lucide="send" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-20 themed-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold themed-text mb-4">Get in Touch</h2>
+                <p class="text-xl themed-text-secondary">We're here to support your educational journey</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Contact Form -->
+                <div class="themed-bg-secondary rounded-2xl p-8 shadow-xl">
+                    <h3 class="text-2xl font-bold themed-text mb-6">Send us a Message</h3>
+                    <form class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium themed-text mb-2">First Name</label>
+                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium themed-text mb-2">Last Name</label>
+                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium themed-text mb-2">Email</label>
+                            <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium themed-text mb-2">Subject</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option>General Inquiry</option>
+                                <option>Technical Support</option>
+                                <option>Partnership Opportunity</option>
+                                <option>Content Feedback</option>
+                                <option>Sponsorship</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium themed-text mb-2">Message</label>
+                            <textarea rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Tell us how we can help you..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Contact Options -->
+                <div class="space-y-8">
+                    <!-- Contact support help image -->
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" alt="Friendly customer support team ready to help" class="w-full h-64 object-cover rounded-2xl shadow-lg" />
+                    
+                    <div class="space-y-6">
+                        <!-- Live Chat -->
+                        <div class="flex items-start space-x-4 p-6 themed-bg-secondary rounded-2xl shadow-lg">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="message-circle" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold themed-text mb-2">Live Chat Support</h4>
+                                <p class="themed-text-secondary mb-3">Get instant help from our support team during school hours.</p>
+                                <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                    Start Chat
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Support -->
+                        <div class="flex items-start space-x-4 p-6 themed-bg-secondary rounded-2xl shadow-lg">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="mail" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold themed-text mb-2">Email Support</h4>
+                                <p class="themed-text-secondary mb-3">Send us detailed questions and we'll respond within 24 hours.</p>
+                                <a href="mailto:support@funda-app.co.za" class="text-primary hover:text-primary/80 font-medium">
+                                    support@funda-app.co.za
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Meeting Booking -->
+                        <div class="flex items-start space-x-4 p-6 themed-bg-secondary rounded-2xl shadow-lg">
+                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="calendar" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold themed-text mb-2">Schedule a Meeting</h4>
+                                <p class="themed-text-secondary mb-3">Book a call with our team for partnerships and sponsorships.</p>
+                                <button class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                                    Book Meeting
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Wellness Resources -->
+                        <div class="flex items-start space-x-4 p-6 themed-bg-secondary rounded-2xl shadow-lg">
+                            <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="heart" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold themed-text mb-2">Wellness & Counseling</h4>
+                                <p class="themed-text-secondary mb-3">Access mental health resources and counseling support.</p>
+                                <button class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-colors">
+                                    Get Help
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Multi-Language Quiz Demo -->
+    <section class="py-20 themed-bg-secondary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold themed-text mb-4">Multi-Language Learning</h2>
+                <p class="text-xl themed-text-secondary">Practice in any of South Africa's 11 official languages</p>
+            </div>
+            
+            <div class="max-w-3xl mx-auto">
+                <div class="themed-bg rounded-2xl shadow-2xl overflow-hidden">
+                    <!-- Quiz Header -->
+                    <div class="bg-gradient-to-r from-primary to-secondary text-white p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-2xl font-bold mb-2">Mathematics Quiz</h3>
+                                <p class="opacity-90">Question 3 of 10 • Grade 8</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold">05:43</div>
+                                <p class="text-sm opacity-90">Time remaining</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="mt-4 bg-white/20 rounded-full h-2">
+                            <div class="bg-white rounded-full h-2 w-3/10 transition-all duration-300"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quiz Content -->
+                    <div class="p-8">
+                        <!-- Language Selector -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium themed-text mb-3">Choose your language / Kies jou taal / Khetha ulimi lwakho:</label>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <button class="bg-primary text-white px-3 py-2 rounded-lg text-sm font-medium">English</button>
+                                <button class="themed-bg-secondary themed-text px-3 py-2 rounded-lg text-sm hover:bg-gray-100">isiZulu</button>
+                                <button class="themed-bg-secondary themed-text px-3 py-2 rounded-lg text-sm hover:bg-gray-100">Afrikaans</button>
+                                <button class="themed-bg-secondary themed-text px-3 py-2 rounded-lg text-sm hover:bg-gray-100">isiXhosa</button>
+                                <button class="themed-bg-secondary themed-text px-3 py-2 rounded-lg text-sm hover:bg-gray-100">Sesotho</button>
+                                <button class="themed-bg-secondary themed-text px-3 py-2 rounded-lg text-sm hover:bg-gray-100">Setswana</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Question -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold themed-text mb-4">
+                                What is the result of 2x + 5 = 13?
+                            </h4>
+                            <p class="themed-text-secondary text-sm mb-2">
+                                <span class="font-medium">isiZulu:</span> Yini umphumela ka-2x + 5 = 13?
+                            </p>
+                            <p class="themed-text-secondary text-sm">
+                                <span class="font-medium">Afrikaans:</span> Wat is die resultaat van 2x + 5 = 13?
+                            </p>
+                        </div>
+                        
+                        <!-- Answer Options -->
+                        <div class="space-y-3 mb-8">
+                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                                <input type="radio" name="answer" value="a" class="sr-only">
+                                <div class="w-6 h-6 border-2 border-gray-300 rounded-full mr-4 flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-primary rounded-full hidden"></div>
+                                </div>
+                                <span class="themed-text font-medium">A) x = 4</span>
+                            </label>
+                            
+                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                                <input type="radio" name="answer" value="b" class="sr-only">
+                                <div class="w-6 h-6 border-2 border-gray-300 rounded-full mr-4 flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-primary rounded-full hidden"></div>
+                                </div>
+                                <span class="themed-text font-medium">B) x = 6</span>
+                            </label>
+                            
+                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                                <input type="radio" name="answer" value="c" class="sr-only">
+                                <div class="w-6 h-6 border-2 border-gray-300 rounded-full mr-4 flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-primary rounded-full hidden"></div>
+                                </div>
+                                <span class="themed-text font-medium">C) x = 8</span>
+                            </label>
+                            
+                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                                <input type="radio" name="answer" value="d" class="sr-only">
+                                <div class="w-6 h-6 border-2 border-gray-300 rounded-full mr-4 flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-primary rounded-full hidden"></div>
+                                </div>
+                                <span class="themed-text font-medium">D) x = 9</span>
+                            </label>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between">
+                            <button class="px-6 py-3 border border-gray-300 themed-text rounded-lg hover:bg-gray-50 transition-colors">
+                                Previous
+                            </button>
+                            <div class="flex space-x-3">
+                                <button class="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                                    Hint
+                                </button>
+                                <button class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                                    Next Question
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Educational Games Showcase -->
+    <section class="py-20 themed-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold themed-text mb-4">Educational Games</h2>
+                <p class="text-xl themed-text-secondary">Make learning fun with interactive games and challenges</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Math Quiz Game -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Educational games children -->
+                    <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Children playing educational math games" class="w-full h-32 object-cover rounded-xl mb-4" />
+                    <h3 class="text-lg font-bold themed-text mb-2">Math Quiz Challenge</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Test your math skills with timed quizzes across all grade levels.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Grades 1-12</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+                
+                <!-- Word Search -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Language learning multilingual -->
+                    <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Multilingual language learning activities" class="w-full h-32 object-cover rounded-xl mb-4" />
+                    <h3 class="text-lg font-bold themed-text mb-2">Word Search</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Find hidden words in multiple South African languages.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">All Languages</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+                
+                <!-- Memory Match -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <!-- Beautiful UI design elements -->
+                    <img src="https://images.unsplash.com/photo-1561736778-92e52a7769ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" alt="Beautiful colorful UI design elements for games" class="w-full h-32 object-cover rounded-xl mb-4" />
+                    <h3 class="text-lg font-bold themed-text mb-2">Memory Match</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Improve memory skills by matching educational content pairs.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">All Ages</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+                
+                <!-- Typing Sprint -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="w-full h-32 bg-gradient-to-br from-orange-400 to-red-400 rounded-xl mb-4 flex items-center justify-center">
+                        <i data-lucide="keyboard" class="w-12 h-12 text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-bold themed-text mb-2">Typing Sprint</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Improve typing speed and accuracy with educational texts.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">Grade 4+</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+                
+                <!-- Science Quiz -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="w-full h-32 bg-gradient-to-br from-teal-400 to-cyan-400 rounded-xl mb-4 flex items-center justify-center">
+                        <i data-lucide="flask-conical" class="w-12 h-12 text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-bold themed-text mb-2">Science Quiz</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Explore scientific concepts through interactive quizzes.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-teal-100 text-teal-800 px-2 py-1 rounded-full text-xs">Grade 7-12</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+                
+                <!-- Spelling Bee -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="w-full h-32 bg-gradient-to-br from-yellow-400 to-amber-400 rounded-xl mb-4 flex items-center justify-center">
+                        <i data-lucide="spell-check" class="w-12 h-12 text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-bold themed-text mb-2">Spelling Bee</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Master spelling in English and indigenous languages.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Grade 1-8</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+                
+                <!-- History Quiz -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="w-full h-32 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-xl mb-4 flex items-center justify-center">
+                        <i data-lucide="landmark" class="w-12 h-12 text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-bold themed-text mb-2">SA History Quiz</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Learn about South African history and heritage.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs">Grade 4-12</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+                
+                <!-- Flags of Africa -->
+                <div class="themed-bg-secondary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                    <div class="w-full h-32 bg-gradient-to-br from-green-400 to-blue-400 rounded-xl mb-4 flex items-center justify-center">
+                        <i data-lucide="flag" class="w-12 h-12 text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-bold themed-text mb-2">African Flags</h3>
+                    <p class="themed-text-secondary text-sm mb-4">Identify flags and learn about African countries.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Geography</span>
+                        <button class="bg-primary text-white px-3 py-1 rounded-lg text-sm hover:bg-primary/90">Play</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="themed-bg-secondary border-t py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
+                            <i data-lucide="graduation-cap" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold themed-text">Funda-App</h3>
+                            <p class="text-sm themed-text-secondary">Empowering SA Education</p>
+                        </div>
+                    </div>
+                    <p class="themed-text-secondary text-sm">
+                        Transforming education in South Africa through innovative technology, 
+                        multilingual support, and collaborative learning experiences.
+                    </p>
+                    <div class="flex space-x-3">
+                        <button class="w-8 h-8 bg-primary/10 themed-text rounded-lg hover:bg-primary hover:text-white transition-colors">
+                            <i data-lucide="facebook" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                        <button class="w-8 h-8 bg-primary/10 themed-text rounded-lg hover:bg-primary hover:text-white transition-colors">
+                            <i data-lucide="twitter" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                        <button class="w-8 h-8 bg-primary/10 themed-text rounded-lg hover:bg-primary hover:text-white transition-colors">
+                            <i data-lucide="instagram" class="w-4 h-4 mx-auto"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Learning -->
+                <div>
+                    <h4 class="font-semibold themed-text mb-4">Learning</h4>
+                    <ul class="space-y-2 themed-text-secondary text-sm">
+                        <li><a href="#" class="hover:themed-accent transition-colors">Practice Zone</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Educational Games</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Study Groups</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Video Library</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">AI Tutors</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Support -->
+                <div>
+                    <h4 class="font-semibold themed-text mb-4">Support</h4>
+                    <ul class="space-y-2 themed-text-secondary text-sm">
+                        <li><a href="#" class="hover:themed-accent transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Live Chat</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Wellness Resources</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Report Issue</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Languages -->
+                <div>
+                    <h4 class="font-semibold themed-text mb-4">Languages</h4>
+                    <ul class="space-y-2 themed-text-secondary text-sm">
+                        <li><a href="#" class="hover:themed-accent transition-colors">English</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">isiZulu</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">Afrikaans</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">isiXhosa</a></li>
+                        <li><a href="#" class="hover:themed-accent transition-colors">View All (11)</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="themed-text-secondary text-sm">
+                    © 2024 Funda-App. All rights reserved. Proudly South African.
+                </p>
+                <div class="flex space-x-6 mt-4 md:mt-0 text-sm themed-text-secondary">
+                    <a href="#" class="hover:themed-accent transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:themed-accent transition-colors">Terms of Service</a>
+                    <a href="#" class="hover:themed-accent transition-colors">Accessibility</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Theme switching functionality
+        function switchTheme(theme) {
+            const body = document.body;
+            body.className = body.className.replace(/theme-\w+/, `theme-${theme}`);
+            
+            // Store theme preference
+            localStorage.setItem('preferred-theme', theme);
+            
+            // Add transition class temporarily
+            body.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                body.style.transition = '';
+            }, 300);
+        }
+        
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('preferred-theme') || 'default';
+            switchTheme(savedTheme);
+            
+            // Radio button functionality for quiz
+            const radioLabels = document.querySelectorAll('label');
+            radioLabels.forEach(label => {
+                label.addEventListener('click', function() {
+                    // Remove active state from all options
+                    radioLabels.forEach(l => {
+                        const radio = l.querySelector('input[type="radio"]');
+                        const indicator = l.querySelector('div > div');
+                        if (radio && radio.name === 'answer') {
+                            l.classList.remove('border-primary', 'bg-primary/5');
+                            l.classList.add('border-gray-200');
+                            if (indicator) indicator.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Add active state to clicked option
+                    this.classList.remove('border-gray-200');
+                    this.classList.add('border-primary', 'bg-primary/5');
+                    const indicator = this.querySelector('div > div');
+                    if (indicator) indicator.classList.remove('hidden');
+                });
+            });
+            
+            // Add some interactive animations
+            const cards = document.querySelectorAll('.card-3d');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateZ(20px) rotateX(5deg) rotateY(5deg) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateZ(0) rotateX(0) rotateY(0) scale(1)';
+                });
+            });
+        });
+        
+        // Add scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // Observe elements for scroll animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const animatedElements = document.querySelectorAll('.animate-slide-up, .animate-fade-in, .animate-scale-in');
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

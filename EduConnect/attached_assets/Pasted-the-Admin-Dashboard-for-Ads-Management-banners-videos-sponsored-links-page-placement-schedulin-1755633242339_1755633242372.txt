@@ -1,0 +1,427 @@
+the Admin Dashboard for:
+
+Ads Management (banners, videos, sponsored links; page/placement scheduling)
+
+Content Management (textbooks, PDFs, videos, links; grade/subject tagging)
+
+Practice Zone (MCQs + Essays + Past tests; CRUD by grade/subject)
+
+User Monitoring (learners/teachers: approve teachers, suspend users)
+
+Support Center (abuse/bullying reports: triage, resolve, actions)
+
+Global Dark Mode toggle
+
+Deliver a clean, modular folder structure and fully working APIs.
+
+🗂 Monorepo Structure
+funda-app/
+  apps/
+    frontend/ (Next.js 14 app router)
+    backend/  (Express API)
+  packages/
+    ui/ (shared components, optional)
+  .env.example
+  README.md
+
+🔐 Authentication
+
+JWT auth, HTTP-only cookies or Bearer token.
+
+Roles: admin, teacher, learner, abet.
+
+Hidden admin login: POST /api/auth/login supports email=admin, password=admin123 → returns role=admin.
+
+Teachers require admin approval before status=active.
+
+🧰 Backend (Express + MongoDB)
+ENV
+MONGO_URI=
+JWT_SECRET=
+UPLOAD_DIR=./uploads
+ALLOWED_ORIGINS=http://localhost:3000
+
+Models (Mongoose)
+
+Create these with timestamps.
+
+User
+
+// users
+{ 
+  name, surname, email (unique), phone,
+  password, role: ['admin','teacher','learner','abet'],
+  status: ['pending','active','suspended'], // teachers default 'pending'
+  avatarUrl, bio, grade, province, school
+}
+
+
+Content
+
+// textbooks, notes, links, videos
+{
+  title, type: ['pdf','video','link','note'],
+  url, // for links/videos
+  filePath, // for uploaded PDFs
+  grade, subject, tags: [String],
+  uploadedBy: ObjectId<User>,
+  visibility: ['public','teachers','admin'],
+  meta: { size, mime }
+}
+
+
+Practice
+
+// practice zone question bank
+{
+  kind: ['mcq','essay','past-test'],
+  grade, subject, language,
+  question, options: [String], answer, // for MCQ
+  essayPrompt, rubric, // for essays
+  source, difficulty: ['easy','medium','hard'],
+  createdBy: ObjectId<User>
+}
+
+
+Ad
+
+// ads/banners/sponsored
+{
+  title,
+  type: ['banner','video','sponsored-link'],
+  mediaUrl, clickUrl,
+  placement: ['dashboard','game-zone','study-groups','practice-zone'],
+  pages: [String], // extra routing slugs if needed
+  startAt, endAt,
+  active: Boolean,
+  priority: Number // higher = show first
+}
+
+
+Report
+
+// support center reports (abuse/bullying)
+{
+  reporter: ObjectId<User>,
+  targetUser: ObjectId<User>, // optional
+  context: { groupId: ObjectId, messageId: ObjectId, location: String },
+  reason, details, attachments: [String],
+  status: ['open','in_review','resolved'],
+  actions: [{ by: ObjectId<User>, action: String, note: String, at: Date }]
+}
+
+
+AuditLog (simple activity log)
+
+{
+  actor: ObjectId<User>,
+  action: String, // 'CREATE_CONTENT', 'APPROVE_TEACHER', 'SUSPEND_USER', etc.
+  entityType: String, entityId: ObjectId,
+  meta: Object,
+  at: Date
+}
+
+Middleware
+
+authMiddleware verifies JWT, attaches req.user.
+
+requireRole(...roles) guards admin endpoints.
+
+multer for file uploads → save to /uploads and return filePath.
+
+Routes
+
+Auth
+
+POST /api/auth/signup   // learner/teacher/abet
+POST /api/auth/login    // includes hidden admin: admin/admin123
+GET  /api/auth/me
+
+
+Admin: Users
+
+GET    /api/admin/teachers?status=pending|active
+PATCH  /api/admin/teachers/:id/approve
+PATCH  /api/admin/users/:id/suspend
+PATCH  /api/admin/users/:id/activate
+GET    /api/admin/users?role=&grade=
+
+
+Admin: Content
+
+POST   /api/admin/content/upload        // multer (pdf/video/image)
+POST   /api/admin/content/link          // link + metadata
+GET    /api/content?grade=&subject=&type=
+DELETE /api/admin/content/:id
+
+
+Admin: Practice Zone
+
+POST   /api/admin/practice              // create (mcq/essay/past-test)
+PATCH  /api/admin/practice/:id
+DELETE /api/admin/practice/:id
+GET    /api/practice?grade=&subject=&language=&kind=
+
+
+Admin: Ads
+
+POST   /api/admin/ads
+PATCH  /api/admin/ads/:id
+DELETE /api/admin/ads/:id
+GET    /api/ads?placement=&active=true
+
+
+Support Center
+
+POST   /api/reports           // learners/teachers submit report
+GET    /api/admin/reports?status=
+PATCH  /api/admin/reports/:id // update status, add action note
+
+
+Utilities
+
+GET /api/admin/stats  // totals: users by role, active teachers, content count, open reports, running ads
+
+Example: minimal server + a few routes (Express)
+// apps/backend/server.js
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const multer = require('multer');
+const path = require('path');
+
+require('dotenv').config();
+const app = express();
+const server = http.createServer(app);
+
+app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') || '*', credentials: true }));
+app.use(express.json());
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+mongoose.connect(process.env.MONGO_URI);
+
+const { User, Content, Practice, Ad, Report, AuditLog } = require('./models'); // export all from index
+
+// --- auth middleware ---
+const auth = (req,res,next)=>{
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if(!token) return res.status(401).json({message:'No token'});
+  try { req.user = jwt.verify(token, process.env.JWT_SECRET); next(); }
+  catch { return res.status(401).json({message:'Invalid token'}); }
+};
+const requireRole = (...roles)=> (req,res,next)=>{
+  if(!req.user || !roles.includes(req.user.role)) return res.status(403).json({message:'Forbidden'});
+  next();
+};
+
+// --- auth routes ---
+app.post('/api/auth/login', async (req,res)=>{
+  const { email, password } = req.body;
+  if (email === 'admin' && password === 'admin123') {
+    const token = jwt.sign({ id:'admin', role:'admin' }, process.env.JWT_SECRET);
+    return res.json({ token, user: { id:'admin', role:'admin', name:'Admin' }});
+  }
+  const user = await User.findOne({ email });
+  if(!user) return res.status(400).json({message:'User not found'});
+  const ok = await user.comparePassword(password);
+  if(!ok) return res.status(400).json({message:'Invalid credentials'});
+  const token = jwt.sign({ id:user._id, role:user.role }, process.env.JWT_SECRET);
+  res.json({ token, user });
+});
+
+app.post('/api/auth/signup', async (req,res)=>{
+  const u = new User(req.body); // validate in schema
+  await u.save();
+  const token = jwt.sign({ id:u._id, role:u.role }, process.env.JWT_SECRET);
+  res.status(201).json({ token, user:u });
+});
+
+// --- file uploads (pdf/video/image) ---
+const storage = multer.diskStorage({
+  destination: (_, __, cb)=> cb(null, process.env.UPLOAD_DIR || './uploads'),
+  filename: (_, file, cb)=> cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({ storage });
+
+// --- admin content ---
+app.post('/api/admin/content/upload', auth, requireRole('admin'), upload.single('file'), async (req,res)=>{
+  const doc = await Content.create({
+    title: req.body.title,
+    type: req.body.type, // 'pdf'|'video'|'image'
+    filePath: req.file ? `/uploads/${req.file.filename}` : null,
+    grade: req.body.grade, subject: req.body.subject, tags: req.body.tags?.split(',')||[],
+    uploadedBy: req.user.id
+  });
+  res.status(201).json(doc);
+});
+app.post('/api/admin/content/link', auth, requireRole('admin'), async (req,res)=>{
+  const doc = await Content.create({
+    title:req.body.title, type:'link', url:req.body.url,
+    grade:req.body.grade, subject:req.body.subject, tags:req.body.tags||[],
+    uploadedBy:req.user.id
+  });
+  res.status(201).json(doc);
+});
+app.get('/api/content', async (req,res)=>{
+  const q = { ...(req.query.grade && {grade:req.query.grade}), ...(req.query.subject && {subject:req.query.subject}), ...(req.query.type && {type:req.query.type}) };
+  res.json(await Content.find(q).sort({createdAt:-1}));
+});
+app.delete('/api/admin/content/:id', auth, requireRole('admin'), async (req,res)=>{
+  await Content.findByIdAndDelete(req.params.id);
+  res.json({ok:true});
+});
+
+// --- practice zone admin ---
+app.post('/api/admin/practice', auth, requireRole('admin'), async (req,res)=>{
+  const doc = await Practice.create({ ...req.body, createdBy:req.user.id });
+  res.status(201).json(doc);
+});
+app.patch('/api/admin/practice/:id', auth, requireRole('admin'), async (req,res)=>{
+  const doc = await Practice.findByIdAndUpdate(req.params.id, req.body, {new:true});
+  res.json(doc);
+});
+app.delete('/api/admin/practice/:id', auth, requireRole('admin'), async (req,res)=>{
+  await Practice.findByIdAndDelete(req.params.id);
+  res.json({ok:true});
+});
+app.get('/api/practice', async (req,res)=>{
+  const { grade, subject, language, kind } = req.query;
+  const q = { ...(grade && {grade}), ...(subject && {subject}), ...(language && {language}), ...(kind && {kind}) };
+  res.json(await Practice.find(q).sort({createdAt:-1}));
+});
+
+// --- ads ---
+app.post('/api/admin/ads', auth, requireRole('admin'), async (req,res)=>{
+  const ad = await Ad.create(req.body);
+  res.status(201).json(ad);
+});
+app.patch('/api/admin/ads/:id', auth, requireRole('admin'), async (req,res)=>{
+  res.json(await Ad.findByIdAndUpdate(req.params.id, req.body, {new:true}));
+});
+app.delete('/api/admin/ads/:id', auth, requireRole('admin'), async (req,res)=>{
+  await Ad.findByIdAndDelete(req.params.id);
+  res.json({ok:true});
+});
+app.get('/api/ads', async (req,res)=>{
+  const now = new Date();
+  const q = {
+    ...(req.query.placement && {placement:req.query.placement}),
+    ...(req.query.active && {active:req.query.active==='true'}),
+    $or: [
+      { startAt: { $exists:false }, endAt: { $exists:false } },
+      { startAt: { $lte: now }, endAt: { $gte: now } }
+    ]
+  };
+  res.json(await Ad.find(q).sort({priority:-1, createdAt:-1}));
+});
+
+// --- teacher approvals / users ---
+app.get('/api/admin/teachers', auth, requireRole('admin'), async (req,res)=>{
+  const { status } = req.query;
+  res.json(await User.find({ role:'teacher', ...(status && {status}) }).sort({createdAt:-1}));
+});
+app.patch('/api/admin/teachers/:id/approve', auth, requireRole('admin'), async (req,res)=>{
+  res.json(await User.findByIdAndUpdate(req.params.id, {status:'active'}, {new:true}));
+});
+app.patch('/api/admin/users/:id/suspend', auth, requireRole('admin'), async (req,res)=>{
+  res.json(await User.findByIdAndUpdate(req.params.id, {status:'suspended'}, {new:true}));
+});
+app.patch('/api/admin/users/:id/activate', auth, requireRole('admin'), async (req,res)=>{
+  res.json(await User.findByIdAndUpdate(req.params.id, {status:'active'}, {new:true}));
+});
+
+// --- support center reports ---
+app.post('/api/reports', auth, async (req,res)=>{
+  const doc = await Report.create({ ...req.body, reporter:req.user.id, status:'open' });
+  res.status(201).json(doc);
+});
+app.get('/api/admin/reports', auth, requireRole('admin'), async (req,res)=>{
+  const { status } = req.query;
+  res.json(await Report.find({ ...(status && {status}) }).sort({createdAt:-1}));
+});
+app.patch('/api/admin/reports/:id', auth, requireRole('admin'), async (req,res)=>{
+  const { status, actionNote } = req.body;
+  const update = {
+    ...(status && {status}),
+    $push: actionNote ? { actions: { by:req.user.id, action:status||'NOTE', note:actionNote, at:new Date() } } : {}
+  };
+  res.json(await Report.findByIdAndUpdate(req.params.id, update, {new:true}));
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, ()=> console.log('API running on :' + PORT));
+
+
+Create apps/backend/models/index.js that exports User, Content, Practice, Ad, Report, AuditLog and define comparePassword with bcrypt.
+
+🖥 Frontend (Next.js + Tailwind + shadcn/ui)
+Pages to build
+
+/admin/login → hidden admin sign-in
+
+/admin → overview stats (cards: users by role, pending teachers, running ads, open reports)
+
+/admin/content → upload PDF/video/image, add links; filter by grade/subject; table + delete
+
+/admin/practice → create/edit/delete MCQ/Essay/Test; filter by grade/subject/language
+
+/admin/teachers → list pending/active; approve/suspend
+
+/admin/users → list learners/abet; suspend/activate
+
+/admin/ads → create/update/delete; placement + schedule + preview
+
+/admin/reports → table with status filter; view detail; resolve/add action notes
+
+Global Dark Mode toggle (persist in localStorage)
+
+UI Notes
+
+Use shadcn/ui Card, Button, Input, Select, Dialog, Table, Badge, Switch.
+
+File upload forms (PDF/video/image) hit /api/admin/content/upload.
+
+Rich text or simple textarea for essayPrompt, rubric.
+
+Ads form with placement and date range pickers.
+
+Show ads via /api/ads?placement=dashboard&active=true.
+
+📦 Ads Rendering (example)
+
+Frontend components:
+
+<AdSlot placement="dashboard" /> → fetches /api/ads?placement=dashboard&active=true, picks top by priority, renders banner/video/link.
+
+🌙 Dark Mode
+
+Tailwind class strategy; save theme in localStorage.
+
+Toggle accessible in admin top-bar.
+
+🚀 Deployment
+
+Backend: Replit/Render/Railway
+
+Frontend: Vercel (set NEXT_PUBLIC_API_URL)
+
+Add CORS origins for your frontend URL.
+
+✅ Acceptance
+
+I can log in as admin/admin123 and:
+
+Upload PDFs/videos/links as Content (tag by grade/subject).
+
+Create/edit/delete Practice MCQs & Essays & Past tests (by grade/subject).
+
+Approve/suspend teachers; view users.
+
+Create/update/delete Ads and see them render in the specified placements.
+
+See Reports, change status, add action notes.
+
+Use Dark Mode.

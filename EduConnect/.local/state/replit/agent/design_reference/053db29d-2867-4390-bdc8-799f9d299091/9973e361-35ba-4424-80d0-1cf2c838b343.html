@@ -1,0 +1,1008 @@
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funda-App - South African Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Default theme
+                        'primary': '#3B82F6',
+                        'secondary': '#64748B',
+                        'accent': '#10B981',
+                        // Dark theme
+                        'dark-bg': '#121212',
+                        'dark-surface': '#1E1E1E',
+                        'dark-text': '#E5E7EB',
+                        // Vibrant theme
+                        'vibrant-blue': '#0EA5E9',
+                        'vibrant-green': '#10B981', 
+                        'vibrant-orange': '#F59E0B',
+                        // Soft theme
+                        'soft-blue': '#DBEAFE',
+                        'soft-green': '#D1FAE5',
+                        'soft-peach': '#FED7AA'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 2s ease-in-out infinite alternate',
+                        'slide-up': 'slide-up 0.8s ease-out',
+                        'fade-in': 'fade-in 1.2s ease-out'
+                    },
+                    keyframes: {
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0px) rotateY(0deg)' },
+                            '50%': { transform: 'translateY(-10px) rotateY(180deg)' }
+                        },
+                        'pulse-glow': {
+                            '0%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)' },
+                            '100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)' }
+                        },
+                        'slide-up': {
+                            '0%': { transform: 'translateY(100px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        'fade-in': {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/@react/three-fiber@8.15.0/dist/index.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Theme-specific styles */
+        [data-theme="light"] {
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F8FAFC;
+            --text-primary: #1F2937;
+            --text-secondary: #64748B;
+            --accent: #3B82F6;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #121212;
+            --bg-secondary: #1E1E1E;
+            --text-primary: #E5E7EB;
+            --text-secondary: #9CA3AF;
+            --accent: #60A5FA;
+        }
+        
+        [data-theme="vibrant"] {
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F0F9FF;
+            --text-primary: #1F2937;
+            --text-secondary: #374151;
+            --accent: #0EA5E9;
+        }
+        
+        [data-theme="soft"] {
+            --bg-primary: #FEFEFE;
+            --bg-secondary: #F9FAFB;
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --accent: #8B5CF6;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .theme-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .floating-3d {
+            transform-style: preserve-3d;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .floating-3d:hover {
+            animation-duration: 1s;
+            transform: scale(1.1) translateZ(20px);
+        }
+
+        .chat-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .chat-bubble.sent {
+            background: var(--accent);
+            color: white;
+            margin-left: auto;
+        }
+
+        .chat-bubble.received {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px) rotateX(5deg);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        /* 3D Logo Animation */
+        @keyframes logoIntro {
+            0% { 
+                transform: translateY(-100vh) rotateY(0deg) scale(0.5);
+                opacity: 0;
+            }
+            60% {
+                transform: translateY(20px) rotateY(180deg) scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(0) rotateY(360deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .logo-intro {
+            animation: logoIntro 2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Navigation Header -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 theme-transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">F</span>
+                    </div>
+                    <span class="text-xl font-bold">Funda-App</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#dashboard" class="text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors">Dashboard</a>
+                    <a href="#practice" class="text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors">Practice Zone</a>
+                    <a href="#games" class="text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors">Games</a>
+                    <a href="#groups" class="text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors">Study Groups</a>
+                </div>
+
+                <!-- Theme Toggle & User Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Theme Toggle -->
+                    <div class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                        <button onclick="setTheme('light')" class="theme-btn px-2 py-1 rounded text-xs" data-theme="light">☀️</button>
+                        <button onclick="setTheme('dark')" class="theme-btn px-2 py-1 rounded text-xs" data-theme="dark">🌙</button>
+                        <button onclick="setTheme('vibrant')" class="theme-btn px-2 py-1 rounded text-xs" data-theme="vibrant">🌈</button>
+                        <button onclick="setTheme('soft')" class="theme-btn px-2 py-1 rounded text-xs" data-theme="soft">🌸</button>
+                    </div>
+
+                    <!-- User Profile -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Profile picture placeholder -->
+                        <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full"></div>
+                        <span class="hidden sm:block text-sm font-medium">Thabo M.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-16">
+        <!-- Hero Section with 3D Elements -->
+        <section class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 theme-transition">
+            <!-- Animated 3D Logo -->
+            <div class="logo-intro mb-8">
+                <div class="w-32 h-32 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl floating-3d">
+                    <span class="text-white font-bold text-4xl">F</span>
+                </div>
+            </div>
+
+            <!-- Hero Content -->
+            <div class="text-center mb-12 animate-fade-in">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    Welcome to Funda-App
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                    Sawubona! Learn, play, and grow with South Africa's premier digital learning hub designed for learners, teachers, ABET adults, and educators across all 11 official languages.
+                </p>
+                <div class="mt-8 flex flex-wrap justify-center gap-4">
+                    <span class="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">🇿🇦 Made for South Africa</span>
+                    <span class="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm">11 Languages Supported</span>
+                    <span class="px-4 py-2 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-sm">Grades 1-12 + ABET</span>
+                </div>
+            </div>
+
+            <!-- 3D Floating Dashboard Icons -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto px-4 animate-slide-up">
+                <!-- Practice Zone Icon -->
+                <div class="floating-3d group cursor-pointer" onclick="openPracticeZone()">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-110 theme-transition">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-center mb-2">Practice Zone</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">MCQs & Essays in all languages</p>
+                    </div>
+                </div>
+
+                <!-- Games Zone Icon -->
+                <div class="floating-3d group cursor-pointer" onclick="openGamesZone()">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-110 theme-transition">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10V9a2 2 0 012-2h2a2 2 0 012 2v1M9 10H6m9 0h3"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-center mb-2">Games Zone</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Educational games & puzzles</p>
+                    </div>
+                </div>
+
+                <!-- Study Groups Icon -->
+                <div class="floating-3d group cursor-pointer" onclick="openStudyGroups()">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-110 theme-transition">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-center mb-2">Study Groups</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Collaborate with peers</p>
+                    </div>
+                </div>
+
+                <!-- Classroom Icon -->
+                <div class="floating-3d group cursor-pointer" onclick="openClassroom()">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-110 theme-transition">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-center mb-2">Classroom</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Virtual learning spaces</p>
+                    </div>
+                </div>
+
+                <!-- AI Assistants Icon -->
+                <div class="floating-3d group cursor-pointer" onclick="openAIAssistants()">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-110 theme-transition">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-center mb-2">AI Assistants</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Smart learning help</p>
+                    </div>
+                </div>
+
+                <!-- Support Center Icon -->
+                <div class="floating-3d group cursor-pointer" onclick="openSupportCenter()">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-110 theme-transition">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-center mb-2">Support Center</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Help & resources</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Practice Zone Section -->
+        <section id="practice-zone" class="py-20 bg-gray-50 dark:bg-gray-900 theme-transition hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Practice Zone</h2>
+                    <p class="text-xl text-gray-600 dark:text-gray-400">Master your subjects with interactive quizzes in all 11 official languages</p>
+                </div>
+
+                <!-- Language Selector -->
+                <div class="flex flex-wrap justify-center gap-3 mb-8">
+                    <select class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-transition">
+                        <option>English</option>
+                        <option>isiZulu</option>
+                        <option>isiXhosa</option>
+                        <option>Afrikaans</option>
+                        <option>Sesotho</option>
+                        <option>Setswana</option>
+                        <option>Sepedi</option>
+                        <option>siSwati</option>
+                        <option>Tshivenda</option>
+                        <option>Xitsonga</option>
+                        <option>isiNdebele</option>
+                    </select>
+                    <select class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-transition">
+                        <option>All Grades</option>
+                        <option>Grade 1</option>
+                        <option>Grade 2</option>
+                        <option>Grade 3</option>
+                        <option>Grade 4</option>
+                        <option>Grade 5</option>
+                        <option>Grade 6</option>
+                        <option>Grade 7</option>
+                        <option>Grade 8</option>
+                        <option>Grade 9</option>
+                        <option>Grade 10</option>
+                        <option>Grade 11</option>
+                        <option>Grade 12</option>
+                    </select>
+                </div>
+
+                <!-- Sample Quiz Question -->
+                <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 theme-transition">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Question 1 of 10</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Grade 4 Mathematics</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full w-1/10"></div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mb-6" onclick="readAloud(this)">What is 15 + 7?</h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors">
+                            A) 20
+                        </button>
+                        <button class="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors">
+                            B) 22
+                        </button>
+                        <button class="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors">
+                            C) 23
+                        </button>
+                        <button class="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors">
+                            D) 25
+                        </button>
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <button class="px-6 py-2 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            Previous
+                        </button>
+                        <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Next Question
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Read Aloud Feature -->
+                <div class="max-w-3xl mx-auto mt-8 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4">
+                    <div class="flex items-center space-x-2 text-amber-800 dark:text-amber-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 14.142M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                        </svg>
+                        <span class="text-sm font-medium">💡 Click on any text to hear it read aloud in your chosen language</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Games Zone Section -->
+        <section id="games-zone" class="py-20 bg-white dark:bg-gray-800 theme-transition hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">Games Zone</h2>
+                    <p class="text-xl text-gray-600 dark:text-gray-400">Learn through play with our collection of educational games</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Math Quiz Game -->
+                    <div class="game-card bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 text-white cursor-pointer transform transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Math Quiz</h3>
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                <span class="text-2xl">🧮</span>
+                            </div>
+                        </div>
+                        <p class="text-blue-100 mb-4">Test your math skills with fun calculations</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-blue-200">Grades 1-12</span>
+                            <button class="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors">
+                                Play Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Word Search Game -->
+                    <div class="game-card bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-6 text-white cursor-pointer transform transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Word Search</h3>
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                <span class="text-2xl">🔍</span>
+                            </div>
+                        </div>
+                        <p class="text-green-100 mb-4">Find hidden words in multiple languages</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-green-200">All Languages</span>
+                            <button class="px-4 py-2 bg-white text-green-600 rounded-lg font-medium hover:bg-green-50 transition-colors">
+                                Play Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Memory Match Game -->
+                    <div class="game-card bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white cursor-pointer transform transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Memory Match</h3>
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                <span class="text-2xl">🧠</span>
+                            </div>
+                        </div>
+                        <p class="text-purple-100 mb-4">Match pairs to improve memory skills</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-purple-200">All Ages</span>
+                            <button class="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-colors">
+                                Play Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Typing Sprint -->
+                    <div class="game-card bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white cursor-pointer transform transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Typing Sprint</h3>
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                <span class="text-2xl">⌨️</span>
+                            </div>
+                        </div>
+                        <p class="text-orange-100 mb-4">Improve typing speed and accuracy</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-orange-200">Intermediate+</span>
+                            <button class="px-4 py-2 bg-white text-orange-600 rounded-lg font-medium hover:bg-orange-50 transition-colors">
+                                Play Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SA History Quiz -->
+                    <div class="game-card bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl p-6 text-white cursor-pointer transform transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">SA History</h3>
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                <span class="text-2xl">🇿🇦</span>
+                            </div>
+                        </div>
+                        <p class="text-yellow-100 mb-4">Learn South African history through quizzes</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-yellow-200">Grades 4-12</span>
+                            <button class="px-4 py-2 bg-white text-yellow-600 rounded-lg font-medium hover:bg-yellow-50 transition-colors">
+                                Play Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Flags of Africa -->
+                    <div class="game-card bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl p-6 text-white cursor-pointer transform transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Flags of Africa</h3>
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                <span class="text-2xl">🌍</span>
+                            </div>
+                        </div>
+                        <p class="text-indigo-100 mb-4">Match flags to African countries</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-indigo-200">Geography</span>
+                            <button class="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors">
+                                Play Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Study Groups Section -->
+        <section id="study-groups" class="py-20 bg-gray-50 dark:bg-gray-900 theme-transition hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 h-screen max-h-[800px]">
+                    <!-- Groups Sidebar -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl theme-transition">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h2 class="text-xl font-bold mb-4">Study Groups</h2>
+                            <button class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                + Create New Group
+                            </button>
+                        </div>
+                        
+                        <div class="custom-scrollbar overflow-y-auto h-96">
+                            <!-- Group Item -->
+                            <div class="p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold">M</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold">Mathematics Grade 10</h3>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">12 members • Active now</p>
+                                    </div>
+                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                </div>
+                            </div>
+
+                            <!-- Another Group -->
+                            <div class="p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold">E</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold">English Literature</h3>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">8 members • 5 min ago</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- IsiZulu Group -->
+                            <div class="p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold">Z</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold">isiZulu Grade 11</h3>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">15 members • 1 hour ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Area -->
+                    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl flex flex-col theme-transition">
+                        <!-- Chat Header -->
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-bold">M</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold">Mathematics Grade 10</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">12 members online</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                    </svg>
+                                </button>
+                                <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div class="flex-1 custom-scrollbar overflow-y-auto p-6 space-y-4">
+                            <!-- Received Message -->
+                            <div class="flex items-start space-x-3">
+                                <!-- A modern African student in colorful school uniform studying with tablet -->
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Student avatar" class="w-8 h-8 rounded-full">
+                                <div>
+                                    <div class="chat-bubble received rounded-2xl px-4 py-2 max-w-xs">
+                                        <p class="text-sm">Hey everyone! Anyone understand question 5 from the algebra worksheet?</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Sipho • 2:30 PM</p>
+                                </div>
+                            </div>
+
+                            <!-- Sent Message -->
+                            <div class="flex items-start space-x-3 justify-end">
+                                <div>
+                                    <div class="chat-bubble sent rounded-2xl px-4 py-2 max-w-xs">
+                                        <p class="text-sm">I can help! It's about factoring quadratic equations. Want me to share my notes?</p>
+                                    </div>
+                                    <p class="text-xs text-gray-300 mt-1 text-right">You • 2:32 PM ✓✓</p>
+                                </div>
+                            </div>
+
+                            <!-- File Sharing Message -->
+                            <div class="flex items-start space-x-3">
+                                <!-- South African student with backpack and books -->
+                                <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Student avatar" class="w-8 h-8 rounded-full">
+                                <div>
+                                    <div class="chat-bubble received rounded-2xl px-4 py-2 max-w-xs">
+                                        <div class="flex items-center space-x-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <div>
+                                                <p class="text-sm font-medium">Algebra_Notes.pdf</p>
+                                                <p class="text-xs text-gray-500">2.3 MB</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nomsa • 2:35 PM</p>
+                                </div>
+                            </div>
+
+                            <!-- Voice Note -->
+                            <div class="flex items-start space-x-3 justify-end">
+                                <div>
+                                    <div class="chat-bubble sent rounded-2xl px-4 py-2 max-w-xs">
+                                        <div class="flex items-center space-x-2">
+                                            <button class="p-2 bg-white/20 rounded-full">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M8 5v14l11-7z"></path>
+                                                </svg>
+                                            </button>
+                                            <div class="flex-1">
+                                                <div class="w-32 h-1 bg-white/30 rounded-full">
+                                                    <div class="w-8 h-1 bg-white rounded-full"></div>
+                                                </div>
+                                            </div>
+                                            <span class="text-xs">0:15</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-300 mt-1 text-right">You • 2:38 PM ✓✓</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center space-x-3">
+                                <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                    </svg>
+                                </button>
+                                <div class="flex-1 relative">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Type a message..." 
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 theme-transition"
+                                    >
+                                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10V9a2 2 0 012-2h2a2 2 0 012 2v1M9 10H6m9 0h3"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <button class="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- South African Resources Section -->
+        <section class="py-20 bg-white dark:bg-gray-800 theme-transition">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">South African Educational Resources</h2>
+                    <p class="text-xl text-gray-600 dark:text-gray-400">Access quality learning materials from trusted SA institutions</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- DBE Resources -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 theme-transition">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold">DBE LTSM</h3>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Official workbooks and study guides from the Department of Basic Education</p>
+                        <a href="#" class="text-green-600 dark:text-green-400 font-medium hover:underline">Access Resources →</a>
+                    </div>
+
+                    <!-- Siyavula -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 theme-transition">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold">Siyavula</h3>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Comprehensive Maths & Science resources with interactive content</p>
+                        <a href="#" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">Explore Content →</a>
+                    </div>
+
+                    <!-- WorksheetCloud -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 theme-transition">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold">WorksheetCloud</h3>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Practice worksheets for all subjects and grade levels</p>
+                        <a href="#" class="text-purple-600 dark:text-purple-400 font-medium hover:underline">Start Practice →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">F</span>
+                        </div>
+                        <span class="text-xl font-bold">Funda-App</span>
+                    </div>
+                    <p class="text-gray-400">Empowering South African learners with digital education for all 11 official languages.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Dashboard</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Practice Zone</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Games</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Study Groups</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Languages</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>English • isiZulu • isiXhosa</li>
+                        <li>Afrikaans • Sesotho • Setswana</li>
+                        <li>Sepedi • siSwati • Tshivenda</li>
+                        <li>Xitsonga • isiNdebele</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Funda-App. Made with ❤️ for South African education.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Management
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+            updateThemeButtons(savedTheme);
+        })();
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeButtons(theme);
+        }
+
+        function updateThemeButtons(activeTheme) {
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('text-gray-600');
+                if (btn.dataset.theme === activeTheme) {
+                    btn.classList.add('bg-blue-600', 'text-white');
+                    btn.classList.remove('text-gray-600');
+                }
+            });
+        }
+
+        // Section Navigation
+        function openPracticeZone() {
+            hideAllSections();
+            document.getElementById('practice-zone').classList.remove('hidden');
+            scrollToSection('practice-zone');
+        }
+
+        function openGamesZone() {
+            hideAllSections();
+            document.getElementById('games-zone').classList.remove('hidden');
+            scrollToSection('games-zone');
+        }
+
+        function openStudyGroups() {
+            hideAllSections();
+            document.getElementById('study-groups').classList.remove('hidden');
+            scrollToSection('study-groups');
+        }
+
+        function openClassroom() {
+            alert('🏫 Classroom feature coming soon! Teachers will be able to create virtual classrooms for their students.');
+        }
+
+        function openAIAssistants() {
+            alert('🤖 AI Assistants coming soon! Get personalized help with homework and study planning.');
+        }
+
+        function openSupportCenter() {
+            alert('💬 Support Center coming soon! Get help from our team and community.');
+        }
+
+        function hideAllSections() {
+            ['practice-zone', 'games-zone', 'study-groups'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        }
+
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        // Read Aloud Functionality using Web Speech API
+        function readAloud(element) {
+            if ('speechSynthesis' in window) {
+                const text = element.textContent || element.innerText;
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Set language based on current selection (demo with English)
+                utterance.lang = 'en-US'; // Could be dynamic: 'zu-ZA' for isiZulu, 'af-ZA' for Afrikaans
+                utterance.rate = 0.8;
+                utterance.pitch = 1;
+                
+                window.speechSynthesis.speak(utterance);
+                
+                // Visual feedback
+                element.style.background = 'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)';
+                element.style.color = 'white';
+                element.style.transform = 'scale(1.02)';
+                element.style.transition = 'all 0.3s ease';
+                
+                utterance.onend = () => {
+                    element.style.background = '';
+                    element.style.color = '';
+                    element.style.transform = '';
+                };
+            } else {
+                alert('Sorry, your browser does not support text-to-speech functionality.');
+            }
+        }
+
+        // Add click-to-read functionality to practice zone text
+        document.addEventListener('DOMContentLoaded', function() {
+            const practiceTexts = document.querySelectorAll('#practice-zone h3, #practice-zone p, #practice-zone button');
+            practiceTexts.forEach(element => {
+                element.style.cursor = 'pointer';
+                element.title = 'Click to read aloud';
+            });
+        });
+
+        // Simulated typing indicator for chat
+        let typingTimeout;
+        function showTypingIndicator() {
+            clearTimeout(typingTimeout);
+            // TODO: Show typing indicator in chat
+            typingTimeout = setTimeout(() => {
+                // TODO: Hide typing indicator
+            }, 2000);
+        }
+
+        // Add typing event listener to chat input
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.querySelector('#study-groups input[type="text"]');
+            if (chatInput) {
+                chatInput.addEventListener('input', showTypingIndicator);
+                
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        sendMessage(this.value);
+                        this.value = '';
+                    }
+                });
+            }
+        });
+
+        function sendMessage(text) {
+            if (!text.trim()) return;
+            
+            // TODO: Implement real message sending via Socket.IO
+            console.log('Sending message:', text);
+            
+            // Visual feedback for demo
+            const chatMessages = document.querySelector('#study-groups .custom-scrollbar');
+            if (chatMessages) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex items-start space-x-3 justify-end';
+                messageDiv.innerHTML = `
+                    <div>
+                        <div class="chat-bubble sent rounded-2xl px-4 py-2 max-w-xs">
+                            <p class="text-sm">${text}</p>
+                        </div>
+                        <p class="text-xs text-gray-300 mt-1 text-right">You • just now ✓</p>
+                    </div>
+                `;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Initialize floating animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const floatingElements = document.querySelectorAll('.floating-3d');
+            floatingElements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.2}s`;
+            });
+        });
+
+        // Performance optimization for theme transitions
+        let themeTransitionTimeout;
+        function optimizeThemeTransition() {
+            clearTimeout(themeTransitionTimeout);
+            document.body.classList.add('theme-transitioning');
+            
+            themeTransitionTimeout = setTimeout(() => {
+                document.body.classList.remove('theme-transitioning');
+            }, 300);
+        }
+
+        // Add smooth scroll behavior for better UX
+        document.documentElement.style.scrollBehavior = 'smooth';
+
+        // Initialize tooltips for better accessibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('button, .cursor-pointer');
+            buttons.forEach(btn => {
+                if (!btn.title && btn.textContent) {
+                    btn.title = btn.textContent.trim();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

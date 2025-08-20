@@ -1,0 +1,279 @@
+Game List for Funda-App
+
+Math Quiz ✅ (done above)
+
+Word Search ✅ (done above)
+
+Memory Match ✅ (done above)
+
+Typing Sprint (type words fast)
+
+Spelling Bee (spell given words)
+
+Hangman (classic word guessing)
+
+Sudoku (Mini 4x4)
+
+Scrabble Jr (Word Builder)
+
+SA History Quiz (MCQs on history)
+
+Science Quiz (Physics, Biology, Chemistry)
+
+Fractions Visualizer (drag/drop halves, quarters, etc.)
+
+Flags of Africa Game (match flag → country)
+
+4. Typing Sprint (typing-sprint.tsx)
+'use client'
+import { useState, useEffect } from 'react'
+
+const words = ['school', 'teacher', 'learning', 'future', 'funda']
+
+export default function TypingSprint() {
+  const [word, setWord] = useState(words[0])
+  const [input, setInput] = useState('')
+  const [score, setScore] = useState(0)
+
+  useEffect(() => {
+    const random = words[Math.floor(Math.random() * words.length)]
+    setWord(random)
+  }, [score])
+
+  function check() {
+    if (input.toLowerCase() === word) {
+      setScore(score + 1)
+    }
+    setInput('')
+  }
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">⌨️ Typing Sprint</h1>
+      <p className="my-4 text-lg">{word}</p>
+      <input
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        className="border p-2"
+      />
+      <button onClick={check} className="ml-2 bg-blue-600 text-white px-4 py-2 rounded">
+        Submit
+      </button>
+      <p className="mt-4">Score: {score}</p>
+    </div>
+  )
+}
+
+5. Spelling Bee (spelling-bee.tsx)
+'use client'
+import { useState } from 'react'
+
+const words = ['education', 'science', 'history']
+
+export default function SpellingBee() {
+  const [word, setWord] = useState(words[0])
+  const [input, setInput] = useState('')
+  const [msg, setMsg] = useState('')
+
+  function check() {
+    if (input.toLowerCase() === word) {
+      setMsg('✅ Correct!')
+    } else {
+      setMsg('❌ Try again!')
+    }
+  }
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">🗣️ Spelling Bee</h1>
+      <p>Spell the word: <b>{word.length} letters</b></p>
+      <input value={input} onChange={e => setInput(e.target.value)} className="border p-2" />
+      <button onClick={check} className="ml-2 bg-green-600 text-white px-4 py-2 rounded">Check</button>
+      <p className="mt-4">{msg}</p>
+    </div>
+  )
+}
+
+6. Hangman (hangman.tsx)
+'use client'
+import { useState } from 'react'
+
+const words = ['math', 'afrikaans', 'zulu']
+export default function Hangman() {
+  const [word] = useState(words[Math.floor(Math.random() * words.length)])
+  const [guesses, setGuesses] = useState<string[]>([])
+  const [wrong, setWrong] = useState(0)
+
+  function guess(l: string) {
+    if (word.includes(l)) setGuesses([...guesses, l])
+    else setWrong(wrong + 1)
+  }
+
+  const masked = word.split('').map(c => (guesses.includes(c) ? c : '_')).join(' ')
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">🔤 Hangman</h1>
+      <p className="text-xl my-4">{masked}</p>
+      <div className="grid grid-cols-6 gap-2">
+        {'abcdefghijklmnopqrstuvwxyz'.split('').map(l => (
+          <button
+            key={l}
+            onClick={() => guess(l)}
+            disabled={guesses.includes(l)}
+            className="p-2 border rounded"
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+      <p className="mt-4">Wrong guesses: {wrong}</p>
+    </div>
+  )
+}
+
+7. Sudoku Mini (sudoku.tsx)
+'use client'
+export default function Sudoku() {
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">🧩 Mini Sudoku (4x4)</h1>
+      <p className="text-gray-600">Prototype grid (logic to be added)</p>
+      <div className="grid grid-cols-4 gap-2 mt-4 w-40">
+        {[...Array(16)].map((_, i) => (
+          <input key={i} maxLength={1} className="w-10 h-10 border text-center" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+8. Scrabble Jr (Word Builder) (scrabble.tsx)
+'use client'
+import { useState } from 'react'
+
+export default function Scrabble() {
+  const letters = ['A', 'E', 'S', 'T', 'O', 'N']
+  const [word, setWord] = useState('')
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">🅰️ Scrabble Jr</h1>
+      <p className="mb-2">Build a word:</p>
+      <div className="flex gap-2 mb-4">
+        {letters.map((l, i) => (
+          <button key={i} onClick={() => setWord(word + l)} className="p-2 border rounded bg-white">{l}</button>
+        ))}
+      </div>
+      <p className="text-xl">{word}</p>
+    </div>
+  )
+}
+
+9. SA History Quiz (history-quiz.tsx)
+'use client'
+import { useState } from 'react'
+
+const qs = [
+  { q: "In what year did South Africa hold its first democratic elections?", opts: ["1990","1994","2000"], ans: "1994" }
+]
+
+export default function HistoryQuiz() {
+  const [score, setScore] = useState(0)
+  const [i, setI] = useState(0)
+
+  function answer(opt: string) {
+    if (opt === qs[i].ans) setScore(score + 1)
+    setI(i + 1)
+  }
+
+  if (i >= qs.length) return <p className="p-8">✅ Final Score: {score}</p>
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">📜 SA History Quiz</h1>
+      <p>{qs[i].q}</p>
+      {qs[i].opts.map(o => (
+        <button key={o} onClick={() => answer(o)} className="block mt-2 px-4 py-2 border rounded">{o}</button>
+      ))}
+    </div>
+  )
+}
+
+10. Science Quiz (science-quiz.tsx)
+'use client'
+const qs = [
+  { q: "H2O is the chemical formula for?", opts: ["Oxygen","Water","Hydrogen"], ans: "Water" }
+]
+
+export default function ScienceQuiz() {
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">🔬 Science Quiz</h1>
+      {qs.map((q, i) => (
+        <div key={i} className="mb-4">
+          <p>{q.q}</p>
+          {q.opts.map(o => (
+            <button key={o} className="block mt-1 px-3 py-1 border rounded">{o}</button>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+11. Fractions Visualizer (fractions.tsx)
+'use client'
+import { useState } from 'react'
+
+export default function Fractions() {
+  const [fraction, setFraction] = useState(1/2)
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">🍕 Fractions Visualizer</h1>
+      <p className="mb-2">Showing {fraction * 100}% of circle</p>
+      <div className="relative w-40 h-40 rounded-full border overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-yellow-400 origin-bottom-left"
+          style={{ clipPath: `polygon(50% 50%, 100% 0, 100% 100%)`, transform: `rotate(${fraction * 360}deg)` }} />
+      </div>
+      <div className="mt-4 flex gap-2">
+        {[1/2,1/3,1/4].map(f => (
+          <button key={f} onClick={() => setFraction(f)} className="px-3 py-1 border rounded">
+            {f.toString()}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+12. Flags of Africa (flags.tsx)
+'use client'
+import { useState } from 'react'
+
+const qs = [
+  { flag: "🇿🇦", country: "South Africa" },
+  { flag: "🇳🇬", country: "Nigeria" }
+]
+
+export default function Flags() {
+  const [i, setI] = useState(0)
+  const [msg, setMsg] = useState('')
+
+  function check(ans: string) {
+    if (ans === qs[i].country) setMsg("✅ Correct!")
+    else setMsg("❌ Wrong")
+  }
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">🌍 Flags of Africa</h1>
+      <p className="text-6xl">{qs[i].flag}</p>
+      {qs.map(q => (
+        <button key={q.country} onClick={() => check(q.country)} className="block mt-2 border rounded px-4 py-2">{q.country}</button>
+      ))}
+      <p className="mt-4">{msg}</p>
+    </div>
+  )
+}

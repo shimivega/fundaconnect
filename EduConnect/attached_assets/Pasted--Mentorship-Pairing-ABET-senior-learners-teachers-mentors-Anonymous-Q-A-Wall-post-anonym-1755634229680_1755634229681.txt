@@ -1,0 +1,580 @@
+💬 Mentorship Pairing (ABET/senior learners ↔ teachers/mentors)
+
+🕵️ Anonymous Q&A Wall (post anonymously, reply openly; mods can moderate)
+
+🤖 Safe-Mode AI Chatbot (study help with guardrails + kid-friendly tone)
+
+🧠 Wellness & Counseling (helplines/resources, admin-managed)
+
+I’m assuming you already have: Express server, Mongo connection, JWT auth, and role system (learner|teacher|abet|admin). Folder hints match earlier structure.
+
+Backend (Express + MongoDB)
+0) Add to .env
+JWT_SECRET=super_secret
+MONGO_URI=mongodb://localhost:27017/funda
+UPLOAD_DIR=./uploads
+SAFE_BOT_MAX_TOKENS=120
+
+1) Helpers & Middleware
+// backend/middleware/auth.js  (reuse your existing one)
+const jwt = require('jsonwebtoken');
+module.exports = {
+  authRequired: (req, res, next) => {
+    const h = req.headers.authorization || '';
+    const token = h.startsWith('Bearer ') ? h.slice(7) : null;
+    if (!token) return res.status(401).json({ message: 'No token' });
+    try { req.user = jwt.verify(token, process.env.JWT_SECRET); next(); }
+    catch { res.status(401).json({ message: 'Invalid token' }); }
+  },
+  onlyAdmin: (req,res,next)=> req.user?.role==='admin' ? next() : res.status(403).json({message:'Admins only'}),
+  onlyTeacherOrAdmin: (req,res,next)=> ['teacher','admin'].includes(req.user?.role) ? next() : res.status(403).json({message:'Teachers/Admins only'})
+};
+
+// backend/utils/moderation.js
+const BAD = ['kill','suicide','porn','hate','slur1','slur2']; // extend to your list
+function sanitize(text='') {
+  let out = text;
+  BAD.forEach(w=>{
+    const re = new RegExp(`\\b${w}\\b`, 'gi');
+    out = out.replace(re, '*'.repeat(Math.min(w.length, 4)));
+  });
+  return out;
+}
+function containsSevere(text='') {
+  const severe = ['suicide','kill myself'];
+  return severe.some(k => new RegExp(k,'i').test(text));
+}
+module.exports = { sanitize, containsSevere };
+
+2) Models
+// backend/models/MentorProfile.js
+const mongoose = require('mongoose');
+const mentorProfileSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, required: true },
+  role: { type: String, enum: ['teacher','senior','abet'], required: true }, // who mentors
+  subjects: [String],              // ["Maths","English"]
+  grades: [String],                // ["Grade 9","ABET L3"]
+  bio: String,
+  availability: {                  // simple weekly slots
+    days: [String],                // ["Mon","Wed"]
+    times: [String]                // ["16:00-18:00"]
+  },
+  maxMentees: { type: Number, default: 3 },
+  activeMentees: { type: Number, default: 0 }
+},{timestamps:true});
+module.exports = mongoose.model('MentorProfile', mentorProfileSchema);
+
+// backend/models/MenteeProfile.js
+const menteeProfileSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, required: true },
+  intent: { type: String, enum: ['ABET','Senior','Learner'], required: true },
+  subjectNeeds: [String],
+  grade: String,
+  notes: String
+},{timestamps:true});
+module.exports = mongoose.model('MenteeProfile', menteeProfileSchema);
+
+// backend/models/MentorshipPair.js
+const mentorshipPairSchema = new mongoose.Schema({
+  mentor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  mentee: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['pending','active','ended','rejected'], default: 'pending' },
+  subject: String,
+  grade: String,
+  chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'ChatThread' }
+},{timestamps:true});
+module.exports = mongoose.model('MentorshipPair', mentorshipPairSchema);
+
+// backend/models/QAAnon.js (Anonymous Q&A)
+const qaAnonSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  authorHash: String, // one-way hash so mods can correlate repeat abuse
+  subject: String,
+  grade: String,
+  answers: [{
+    text: String,
+    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    isTeacher: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  reported: { type: Boolean, default: false }
+},{timestamps:true});
+module.exports = mongoose.model('QAAnon', qaAnonSchema);
+
+// backend/models/Wellness.js
+const wellnessSchema = new mongoose.Schema({
+  kind: { type: String, enum: ['helpline','article','video','link'], required: true },
+  title: { type: String, required: true },
+  description: String,
+  contact: String, // e.g., "0800 567 567"
+  url: String,
+  region: { type: String, default: 'South Africa' },
+  tags: [String],
+  visible: { type: Boolean, default: true }
+},{timestamps:true});
+module.exports = mongoose.model('Wellness', wellnessSchema);
+
+3) Routes
+3.1 Mentorship Pairing
+// backend/routes/mentorship.js
+const express = require('express');
+const crypto = require('crypto');
+const { authRequired, onlyAdmin, onlyTeacherOrAdmin } = require('../middleware/auth');
+const MentorProfile = require('../models/MentorProfile');
+const MenteeProfile = require('../models/MenteeProfile');
+const MentorshipPair = require('../models/MentorshipPair');
+const router = express.Router();
+
+// create/update mentor profile
+router.post('/mentor', authRequired, async (req,res)=>{
+  const { role, subjects=[], grades=[], bio='', availability={}, maxMentees=3 } = req.body;
+  const doc = await MentorProfile.findOneAndUpdate(
+    { user: req.user.id },
+    { role, subjects, grades, bio, availability, maxMentees },
+    { upsert:true, new:true }
+  );
+  res.json(doc);
+});
+
+// create/update mentee profile
+router.post('/mentee', authRequired, async (req,res)=>{
+  const { intent, subjectNeeds=[], grade='', notes='' } = req.body;
+  const doc = await MenteeProfile.findOneAndUpdate(
+    { user: req.user.id },
+    { intent, subjectNeeds, grade, notes },
+    { upsert:true, new:true }
+  );
+  res.json(doc);
+});
+
+// auto-match: best subject & grade overlap + capacity
+router.post('/match', authRequired, async (req,res)=>{
+  const me = await MenteeProfile.findOne({ user: req.user.id });
+  if (!me) return res.status(400).json({ message:'Create mentee profile first' });
+
+  const mentors = await MentorProfile.find({
+    subjects: { $in: me.subjectNeeds?.length ? me.subjectNeeds : [] },
+    grades: me.grade ? { $in: [me.grade] } : { $exists: true },
+    $expr: { $lt: ['$activeMentees', '$maxMentees'] }
+  }).populate('user','name surname role');
+
+  if (!mentors.length) return res.json({ message:'No mentors available right now' });
+
+  // simple score: subject overlap count
+  const score = (m)=> (m.subjects.filter(s=>me.subjectNeeds.includes(s)).length) + (m.grades.includes(me.grade)?1:0);
+  mentors.sort((a,b)=> score(b)-score(a));
+
+  const top = mentors[0];
+  const pair = await MentorshipPair.create({
+    mentor: top.user._id,
+    mentee: req.user.id,
+    status: 'pending',
+    subject: (me.subjectNeeds[0]||top.subjects[0]||'General'),
+    grade: me.grade || (top.grades[0]||'')
+  });
+
+  res.json({ pair, mentor: top.user });
+});
+
+// mentor accepts/declines
+router.post('/pair/:id/decision', authRequired, async (req,res)=>{
+  const { decision } = req.body; // 'accept'|'reject'
+  const pair = await MentorshipPair.findById(req.params.id);
+  if (!pair) return res.status(404).json({ message:'Not found' });
+  if (String(pair.mentor) !== req.user.id) return res.status(403).json({ message:'Only mentor can decide' });
+
+  if (decision === 'accept') {
+    pair.status = 'active';
+    await pair.save();
+    await MentorProfile.updateOne({ user: pair.mentor }, { $inc: { activeMentees: 1 } });
+  } else {
+    pair.status = 'rejected';
+    await pair.save();
+  }
+  res.json(pair);
+});
+
+// admin end pairing
+router.post('/pair/:id/end', authRequired, onlyAdmin, async (req,res)=>{
+  const pair = await MentorshipPair.findByIdAndUpdate(req.params.id, { status: 'ended' }, { new:true });
+  await MentorProfile.updateOne({ user: pair.mentor }, { $inc: { activeMentees: -1 } });
+  res.json(pair);
+});
+
+module.exports = router;
+
+3.2 Anonymous Q&A Wall
+// backend/routes/qaAnon.js
+const express = require('express');
+const crypto = require('crypto');
+const { authRequired, onlyAdmin, onlyTeacherOrAdmin } = require('../middleware/auth');
+const { sanitize } = require('../utils/moderation');
+const QAAnon = require('../models/QAAnon');
+const router = express.Router();
+
+function anonHash(userId) {
+  return crypto.createHash('sha256').update(String(userId)).digest('hex').slice(0,12);
+}
+
+// post question (anonymized but rate-limit per user by hash if needed)
+router.post('/ask', authRequired, async (req,res)=>{
+  const { question, subject, grade } = req.body;
+  const q = await QAAnon.create({
+    question: sanitize(question||''),
+    authorHash: anonHash(req.user.id),
+    subject: subject || '',
+    grade: grade || ''
+  });
+  res.json(q);
+});
+
+// list questions
+router.get('/list', authRequired, async (req,res)=>{
+  const { subject, grade, q } = req.query;
+  const match = {};
+  if (subject) match.subject = subject;
+  if (grade) match.grade = grade;
+  if (q) match.question = new RegExp(q, 'i');
+  const items = await QAAnon.find(match).sort('-createdAt').limit(100);
+  res.json(items);
+});
+
+// answer (teachers & peers)
+router.post('/:id/answer', authRequired, async (req,res)=>{
+  const it = await QAAnon.findById(req.params.id);
+  if (!it) return res.status(404).json({ message:'Not found' });
+  const isTeacher = req.user.role === 'teacher' || req.user.role === 'admin';
+  it.answers.push({ text: sanitize(req.body.text||''), author: req.user.id, isTeacher });
+  await it.save();
+  res.json(it);
+});
+
+// report abuse
+router.post('/:id/report', authRequired, async (req,res)=>{
+  const it = await QAAnon.findByIdAndUpdate(req.params.id, { reported: true }, { new:true });
+  res.json(it);
+});
+
+// admin remove question or answer
+router.delete('/:id', authRequired, onlyAdmin, async (req,res)=>{
+  await QAAnon.findByIdAndDelete(req.params.id);
+  res.json({ ok:true });
+});
+
+module.exports = router;
+
+3.3 Safe-Mode AI Chatbot (local, kid-friendly, rule-based)
+
+This is an offline, safe stub you can later swap for a real LLM API. It rewrites answers in simple language, blocks unsafe topics, and keeps responses short.
+
+// backend/routes/safebot.js
+const express = require('express');
+const { authRequired } = require('../middleware/auth');
+const { sanitize, containsSevere } = require('../utils/moderation');
+const router = express.Router();
+
+const BLOCK = [/cheat(ing)? on (tests?|exam)/i, /(self\s*h(a|)rm|suicide)/i, /sexual|porn/i, /violence/i];
+
+// Tiny FAQ base you can expand
+const KB = [
+  { k: /quadratic formula/i, a: "The quadratic formula solves ax²+bx+c=0: x = (-b ± √(b²-4ac)) / (2a). Use it when factoring is hard." },
+  { k: /photosynthesis/i, a: "Plants use sunlight to turn water and carbon dioxide into glucose and oxygen. It happens in chloroplasts." },
+  { k: /past tense of/i, a: "Past tense usually adds -ed (like 'walked'). Many verbs are irregular (go→went, eat→ate)." },
+];
+
+function kidFriendly(text) {
+  // shorten; replace complex words
+  let t = text.replace(/\butilize\b/ig,'use').replace(/\bapproximately\b/ig,'about');
+  if (t.length > 400) t = t.slice(0, 400) + '…';
+  return t;
+}
+
+router.post('/ask', authRequired, async (req,res)=>{
+  const q = String(req.body.q||'').trim();
+  if (!q) return res.status(400).json({ message:'Question required' });
+
+  if (containsSevere(q) || BLOCK.some(r=>r.test(q))) {
+    return res.json({ answer: "I can’t help with that topic. If you’re feeling unsafe or upset, please talk to a trusted adult or use the Wellness page for help.", safe:true });
+  }
+
+  const hit = KB.find(x => x.k.test(q));
+  let answer = hit ? hit.a :
+    "Here’s a simple idea: break the problem into small steps. Share the exact step you’re stuck on, and I’ll guide you.";
+
+  res.json({ answer: kidFriendly(sanitize(answer)), safe:true });
+});
+
+module.exports = router;
+
+3.4 Wellness & Counseling Resources
+// backend/routes/wellness.js
+const express = require('express');
+const { authRequired, onlyAdmin } = require('../middleware/auth');
+const Wellness = require('../models/Wellness');
+const router = express.Router();
+
+// learner-facing list
+router.get('/', authRequired, async (req,res)=>{
+  const { q, kind, tag } = req.query;
+  const match = { visible: true };
+  if (kind) match.kind = kind;
+  if (tag) match.tags = tag;
+  if (q) match.$or = [{ title: new RegExp(q,'i') }, { description: new RegExp(q,'i') }];
+  const items = await Wellness.find(match).sort('-updatedAt');
+  res.json(items);
+});
+
+// admin create/update/hide
+router.post('/', authRequired, onlyAdmin, async (req,res)=>{
+  const it = await Wellness.create(req.body);
+  res.json(it);
+});
+router.put('/:id', authRequired, onlyAdmin, async (req,res)=>{
+  const it = await Wellness.findByIdAndUpdate(req.params.id, req.body, { new:true });
+  res.json(it);
+});
+router.delete('/:id', authRequired, onlyAdmin, async (req,res)=>{
+  await Wellness.findByIdAndDelete(req.params.id);
+  res.json({ ok:true });
+});
+
+module.exports = router;
+
+3.5 Wire routes in server.js
+// backend/server.js (additions)
+const mentorshipRoutes = require('./routes/mentorship');
+const qaAnonRoutes = require('./routes/qaAnon');
+const safebotRoutes = require('./routes/safebot');
+const wellnessRoutes = require('./routes/wellness');
+
+app.use('/api/mentorship', mentorshipRoutes);
+app.use('/api/qa-anon', qaAnonRoutes);
+app.use('/api/safebot', safebotRoutes);
+app.use('/api/wellness', wellnessRoutes);
+
+Frontend (Next.js + Tailwind)
+1) Mentorship (Learner view)
+// frontend/app/mentorship/page.tsx
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function Mentorship() {
+  const [mentee, setMentee] = useState({ intent:'Learner', subjectNeeds:[], grade:'', notes:'' });
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+
+  async function saveProfile() {
+    const res = await fetch('/api/mentorship/mentee', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+      body: JSON.stringify(mentee)
+    });
+    await res.json();
+  }
+  async function match() {
+    const r = await fetch('/api/mentorship/match', { method:'POST', headers:{ Authorization:`Bearer ${token}` }});
+    const data = await r.json();
+    setMessage(data.message || `Matched with ${data.mentor?.name || 'a mentor'} (status: ${data.pair?.status})`);
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Find a Mentor</h1>
+      <div className="grid gap-2">
+        <select className="border px-3 py-2 rounded" value={mentee.intent} onChange={e=>setMentee({...mentee, intent:e.target.value})}>
+          <option>Learner</option><option>Senior</option><option>ABET</option>
+        </select>
+        <div className="flex gap-2">
+          <input className="border px-3 py-2 rounded w-full" placeholder="Add subject need (e.g., Maths)"
+                 value={subject} onChange={e=>setSubject(e.target.value)} />
+          <button className="bg-gray-800 text-white px-3 rounded" onClick={()=>{ if(subject){ setMentee({...mentee, subjectNeeds:[...mentee.subjectNeeds, subject]}); setSubject(''); }}}>Add</button>
+        </div>
+        <div className="text-sm text-gray-600">Needs: {mentee.subjectNeeds.join(', ')||'—'}</div>
+        <input className="border px-3 py-2 rounded" placeholder="Grade (e.g., Grade 10 / ABET L3)" onChange={e=>setMentee({...mentee, grade:e.target.value})}/>
+        <textarea className="border px-3 py-2 rounded" placeholder="Notes…" onChange={e=>setMentee({...mentee, notes:e.target.value})}/>
+        <div className="flex gap-2">
+          <button className="bg-indigo-600 text-white px-4 py-2 rounded" onClick={saveProfile}>Save Profile</button>
+          <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={match}>Find Mentor</button>
+        </div>
+        {message && <div className="p-3 bg-green-50 border rounded">{message}</div>}
+      </div>
+    </div>
+  );
+}
+
+2) Anonymous Q&A Wall
+// frontend/app/qa-anon/page.tsx
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function QAAnon() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+  const [list, setList] = useState<any[]>([]);
+  const [question, setQuestion] = useState('');
+  const [subject, setSubject] = useState('');
+  const [grade, setGrade] = useState('');
+
+  async function load() {
+    const res = await fetch('/api/qa-anon/list', { headers:{ Authorization:`Bearer ${token}` } });
+    setList(await res.json());
+  }
+  useEffect(()=>{ if(token) load(); },[token]);
+
+  async function ask() {
+    await fetch('/api/qa-anon/ask', {
+      method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+      body: JSON.stringify({ question, subject, grade })
+    });
+    setQuestion(''); load();
+  }
+  async function answer(id: string, text: string) {
+    await fetch(`/api/qa-anon/${id}/answer`, {
+      method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+      body: JSON.stringify({ text })
+    });
+    load();
+  }
+  async function report(id: string) {
+    await fetch(`/api/qa-anon/${id}/report`, { method:'POST', headers:{ Authorization:`Bearer ${token}` }});
+    load();
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Anonymous Q&A</h1>
+
+      <div className="grid gap-2">
+        <input className="border px-3 py-2 rounded" placeholder="Subject (optional)" value={subject} onChange={e=>setSubject(e.target.value)}/>
+        <input className="border px-3 py-2 rounded" placeholder="Grade (optional)" value={grade} onChange={e=>setGrade(e.target.value)}/>
+        <textarea className="border px-3 py-2 rounded" placeholder="Ask a question anonymously…" value={question} onChange={e=>setQuestion(e.target.value)} />
+        <button onClick={ask} className="bg-indigo-600 text-white px-4 py-2 rounded">Post Question</button>
+      </div>
+
+      <div className="space-y-4">
+        {list.map((q:any)=>(
+          <div key={q._id} className="border rounded p-4">
+            <div className="text-sm text-gray-500">{q.subject||'General'} • {q.grade||'Any'}</div>
+            <div className="mt-1">{q.question}</div>
+            <button onClick={()=>report(q._id)} className="text-xs text-red-600 mt-2">Report</button>
+            <div className="mt-3 space-y-2">
+              {q.answers?.map((a:any,i:number)=>(
+                <div key={i} className="bg-gray-50 p-2 rounded">
+                  <div className="text-xs text-gray-500">{a.isTeacher?'Teacher':'Peer'} • {new Date(a.createdAt).toLocaleString()}</div>
+                  <div>{a.text}</div>
+                </div>
+              ))}
+            </div>
+            <AnswerBox onSend={(t)=>answer(q._id,t)} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnswerBox({ onSend }:{ onSend:(t:string)=>void }) {
+  const [t,setT]=useState('');
+  return (
+    <div className="flex gap-2 mt-2">
+      <input className="border px-3 py-2 rounded w-full" placeholder="Write a helpful answer…" value={t} onChange={e=>setT(e.target.value)} />
+      <button className="bg-gray-800 text-white px-3 rounded" onClick={()=>{ if(t) onSend(t); setT(''); }}>Send</button>
+    </div>
+  );
+}
+
+3) Safe-Mode AI Chatbot
+// frontend/app/safe-bot/page.tsx
+'use client';
+import { useState } from 'react';
+
+export default function SafeBot() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+  const [q,setQ]=useState('What is the quadratic formula?');
+  const [a,setA]=useState<string>('');
+
+  async function ask() {
+    const r = await fetch('/api/safebot/ask', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+      body: JSON.stringify({ q })
+    });
+    const data = await r.json();
+    setA(data.answer || 'No answer.');
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Study Helper (Safe Mode)</h1>
+      <textarea className="border px-3 py-2 rounded w-full" value={q} onChange={e=>setQ(e.target.value)} />
+      <button onClick={ask} className="bg-indigo-600 text-white px-4 py-2 rounded">Ask</button>
+      {a && <div className="border rounded p-4 bg-gray-50">{a}</div>}
+      <div className="text-xs text-gray-500">Safe mode avoids harmful topics and keeps explanations simple.</div>
+    </div>
+  );
+}
+
+4) Wellness Resources (Learner view + simple Admin add)
+// frontend/app/wellness/page.tsx
+'use client';
+import { useEffect, useState } from 'react';
+export default function Wellness() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+  const [items,setItems]=useState<any[]>([]);
+  const [isAdmin,setIsAdmin]=useState(false);
+
+  useEffect(()=>{
+    (async ()=>{
+      const r = await fetch('/api/wellness', { headers:{ Authorization:`Bearer ${token}` }});
+      setItems(await r.json());
+      // naive role check (replace with your user context)
+      const stored = localStorage.getItem('role'); setIsAdmin(stored==='admin');
+    })();
+  },[token]);
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Wellness & Counseling</h1>
+      <p className="text-sm text-gray-600">If you’re in danger or feel unsafe, contact emergency services immediately.</p>
+      <div className="space-y-3">
+        {items.map((w:any)=>(
+          <a key={w._id} href={w.url||'#'} target={w.url?'_blank':'_self'} className="block border rounded p-3 hover:bg-gray-50">
+            <div className="text-sm text-gray-500">{w.kind} • {w.region}</div>
+            <div className="font-semibold">{w.title}</div>
+            {w.description && <div className="text-sm">{w.description}</div>}
+            {w.contact && <div className="text-sm">☎ {w.contact}</div>}
+          </a>
+        ))}
+      </div>
+      {isAdmin && <AdminWellnessForm />}
+    </div>
+  )
+}
+
+function AdminWellnessForm(){
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+  const [form,setForm]=useState({ kind:'helpline', title:'', description:'', contact:'', url:'', region:'South Africa', tags:'' });
+  async function save(){
+    const body={...form, tags: form.tags? form.tags.split(',').map(t=>t.trim()):[]};
+    await fetch('/api/wellness', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) });
+    location.reload();
+  }
+  return (
+    <div className="mt-8 border rounded p-4 space-y-2">
+      <h2 className="font-semibold">Admin: Add Resource</h2>
+      <div className="grid md:grid-cols-2 gap-2">
+        <select className="border px-3 py-2 rounded" value={form.kind} onChange={e=>setForm({...form, kind:e.target.value})}>
+          <option value="helpline">Helpline</option><option value="article">Article</option><option value="video">Video</option><option value="link">Link</option>
+        </select>
+        <input className="border px-3 py-2 rounded" placeholder="Title" onChange={e=>setForm({...form,title:e.target.value})}/>
+        <input className="border px-3 py-2 rounded" placeholder="Contact (optional)" onChange={e=>setForm({...form,contact:e.target.value})}/>
+        <input className="border px-3 py-2 rounded" placeholder="URL (optional)" onChange={e=>setForm({...form,url:e.target.value})}/>
+        <input className="border px-3 py-2 rounded" placeholder="Region" defaultValue="South Africa" onChange={e=>setForm({...form,region:e.target.value})}/>
+        <input className="border px-3 py-2 rounded" placeholder="Tags (comma)" onChange={e=>setForm({...form,tags:e.target.value})}/>
+        <textarea className="border px-3 py-2 rounded md:col-span-2" placeholder="Description" onChange={e=>setForm({...form,description:e.target.value})}/>
+      </div>
+      <button onClick={save} className="bg-indigo-600 text-white px-4 py-2 rounded">Save Resource</button>
+    </div>
+  )
+}

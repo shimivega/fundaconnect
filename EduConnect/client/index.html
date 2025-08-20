@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Funda-App - South Africa's premier educational platform connecting learners, teachers, and communities through innovative learning experiences. Supporting all 11 official languages with curriculum-aligned content.">
+    <meta name="keywords" content="South Africa education, online learning, CAPS curriculum, multilingual education, study groups, educational videos, practice zone, educational games">
+    <meta name="author" content="Funda-App">
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Funda-App - Educational Platform for South Africa">
+    <meta property="og:description" content="Transform your learning journey with 3D educational experiences, real-time collaboration, and multilingual support across all South African languages.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://funda-app.co.za">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=630">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Funda-App - Educational Platform for South Africa">
+    <meta name="twitter:description" content="Learn in your language with our comprehensive educational platform featuring 3D experiences and real-time collaboration.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=630">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f97316'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🎓</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="msapplication-navbutton-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Funda-App">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>Funda-App - Educational Platform for South Africa | Learn in Your Language</title>
+</head>
+<body class="font-sans antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

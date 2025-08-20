@@ -1,0 +1,103 @@
+Practice Zone Quiz Bank: MCQs + Essay prompts across Grades (1–12) and Languages (English, isiZulu, Sesotho, Afrikaans, Xhosa, Setswana, Sepedi, siSwati, Tshivenda, Xitsonga).
+
+Code for “read aloud”: When a learner selects a word, the browser will speak it aloud using the Web Speech API (built-in to modern browsers).
+
+1. Practice Zone Quiz Bank (Sample Schema)
+
+Let’s structure it as a JSON object so the backend can serve /api/practice/:grade/:subject/:language.
+
+{
+  "english": {
+    "grade4": {
+      "mcqs": [
+        { "q": "What is the opposite of 'happy'?", "opts": ["Sad", "Angry", "Excited"], "ans": "Sad" },
+        { "q": "Choose the correct spelling:", "opts": ["Becaus", "Because", "Becouse"], "ans": "Because" }
+      ],
+      "essayPrompts": [
+        "Write about your favorite day at school.",
+        "Describe your family in five sentences."
+      ]
+    },
+    "grade10": {
+      "mcqs": [
+        { "q": "What is the main theme of Shakespeare’s 'Macbeth'?", "opts": ["Ambition", "Love", "Friendship"], "ans": "Ambition" },
+        { "q": "Which part of speech is the word 'quickly'?", "opts": ["Adjective", "Verb", "Adverb"], "ans": "Adverb" }
+      ],
+      "essayPrompts": [
+        "Discuss the impact of social media on teenagers.",
+        "Should school uniforms be compulsory? Argue for or against."
+      ]
+    }
+  },
+  "isizulu": {
+    "grade4": {
+      "mcqs": [
+        { "q": "Iyiphi igama elichaza ubumnandi?", "opts": ["Omubi", "Omuhle", "Omude"], "ans": "Omuhle" },
+        { "q": "Khetha isenzo:", "opts": ["Hamba", "Isikole", "Inja"], "ans": "Hamba" }
+      ],
+      "essayPrompts": [
+        "Bhala indaba yakho yosuku oluhle esikoleni.",
+        "Chaza umndeni wakho ngamazwi amahlanu."
+      ]
+    },
+    "grade10": {
+      "mcqs": [
+        { "q": "Iyiphi ingxenye yenkulumo igama elithi 'kakhulu'?", "opts": ["Isenzo", "Isiphawulo", "Isandiso"], "ans": "Isandiso" }
+      ],
+      "essayPrompts": [
+        "Xoxa ngendima yezobuchwepheshe empilweni yabafundi.",
+        "Bhala indaba emfushane ngempilo yasemakhaya."
+      ]
+    }
+  },
+  "afrikaans": {
+    "grade7": {
+      "mcqs": [
+        { "q": "Wat is die meervoud van 'boek'?", "opts": ["Boeke", "Boeks", "Boekes"], "ans": "Boeke" },
+        { "q": "Kies die regte werkwoord: Ek ___ skool toe.", "opts": ["loop", "loops", "loopen"], "ans": "loop" }
+      ],
+      "essayPrompts": [
+        "Skryf oor jou beste vriend.",
+        "Beskryf jou gunsteling plek."
+      ]
+    }
+  }
+}
+
+
+👉 You can expand this pattern for all grades & languages (isiXhosa, Sesotho, Setswana, Sepedi, siSwati, Tshivenda, Xitsonga). Each grade should have at least a few MCQs and essay prompts.
+
+2. Read Aloud on Word Selection (Web Speech API)
+
+Here’s a React component that lets learners click or highlight a word, and the browser will speak it aloud:
+
+'use client'
+import { useEffect } from 'react'
+
+export default function Reader() {
+  useEffect(() => {
+    function handleSelection() {
+      const selection = window.getSelection()?.toString().trim()
+      if (selection) {
+        const utterance = new SpeechSynthesisUtterance(selection)
+        utterance.lang = 'en-US' // can set dynamically: 'zu-ZA' for isiZulu, 'af-ZA' for Afrikaans
+        window.speechSynthesis.speak(utterance)
+      }
+    }
+
+    document.addEventListener('mouseup', handleSelection)
+    return () => {
+      document.removeEventListener('mouseup', handleSelection)
+    }
+  }, [])
+
+  return (
+    <div className="p-4 border rounded-xl">
+      <h2 className="font-bold text-lg mb-2">Practice Reading</h2>
+      <p className="text-gray-700">
+        Select any word in this paragraph and I will read it aloud. Learners can use this feature to
+        practice pronunciation and improve reading fluency in different languages.
+      </p>
+    </div>
+  )
+}

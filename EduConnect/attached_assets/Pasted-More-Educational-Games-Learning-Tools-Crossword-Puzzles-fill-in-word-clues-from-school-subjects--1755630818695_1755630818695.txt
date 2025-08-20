@@ -1,0 +1,69 @@
+More Educational Games & Learning Tools
+
+Crossword Puzzles (fill-in word clues from school subjects).
+
+Story Builder (AI-assisted: learners drag & drop characters, setting, and objects → generates a short story).
+
+Typing Tutor (progressive speed tests, track WPM).
+
+Math Duel (Multiplayer) → two learners solve math problems in real-time (via Socket.IO).
+
+Virtual Science Lab → mix elements (simulated chemistry).
+
+Geography Map Explorer → drag country → correct position on Africa/world map.
+
+📊 Dashboards & Tracking
+
+Learner Progress Dashboard: XP points, badges, game stats, practice quiz scores, streaks.
+
+Teacher Dashboard Additions: heatmaps of weak areas in class (Math/English/etc.), assignment completion rate.
+
+Parent Portal (optional): SMS/email notifications when child reaches milestones or reports issues.
+
+🤝 Social & Group Features
+
+Study Groups (already planned): add voice rooms (WebRTC) for group discussions.
+
+Leaderboards per grade, per school, national (gamified).
+
+Safe Chat Filters → real-time AI/moderation to block bad words.
+
+“Buddy System”: learners pair up and solve tasks together.
+
+🧠 Accessibility & AI Assistants
+
+Read-Aloud (done for words) → extend to full passages + highlight spoken word.
+
+Text-to-Sign-Language (basic animation for Deaf learners).
+
+AI Homework Helper → learners upload a question (photo/PDF), AI explains step-by-step.
+
+Adaptive Quizzes → system adjusts difficulty based on learner’s answers.
+
+🎨 Personalization
+
+Avatars & Rewards: learners earn coins/stars → unlock avatar items (clothes, pets, badges).
+
+Classroom Themes: customize background (nature, space, SA landmarks).
+
+AI-Powered Recommendations: suggest next quiz, game, or resource based on past activity.
+
+🛡️ Safety & Wellbeing
+
+Report Centre (you already mentioned) → add anonymous reporting + auto-notify teacher/admin.
+
+Wellness Check-ins → learners answer “How are you feeling today?” (emoji scale), teacher sees class mood.
+
+Digital Citizenship Quests: mini-games teaching cyber safety, anti-bullying, respect online.
+
+🚀 Expansion Ideas (Future)
+
+Augmented Reality (AR) Flashcards → point camera at a card → 3D model pops up (animal, planet, shape).
+
+Offline Mode (PWA) → learners can play quizzes/games offline and sync later.
+
+Integration with DBE/Siyavula resources → one-click access inside dashboard.
+
+Rewards Marketplace → learners redeem points for school stationery, e-books, or vouchers (via partners).
+
+💡 The golden rule: keep games fun but tied to curriculum outcomes (Math, Science, Literacy, History, Languages, Life Skills). That way it’s not just “games” but true gamified learning.

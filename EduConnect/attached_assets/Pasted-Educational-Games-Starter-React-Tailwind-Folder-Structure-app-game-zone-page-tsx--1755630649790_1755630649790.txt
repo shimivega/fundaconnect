@@ -1,0 +1,167 @@
+Educational Games Starter (React + Tailwind)
+Folder Structure
+app/
+  game-zone/
+    page.tsx         // Game Zone menu
+    math-quiz.tsx    // Game 1
+    word-search.tsx  // Game 2
+    memory-match.tsx // Game 3
+
+1. Game Zone Menu (page.tsx)
+'use client'
+import Link from 'next/link'
+
+const games = [
+  { name: 'Math Quiz', path: '/game-zone/math-quiz', desc: 'Test your math skills' },
+  { name: 'Word Search', path: '/game-zone/word-search', desc: 'Find hidden words' },
+  { name: 'Memory Match', path: '/game-zone/memory-match', desc: 'Match pairs to win' }
+  // add more games here...
+]
+
+export default function GameZone() {
+  return (
+    <main className="min-h-screen p-8 bg-gradient-to-b from-blue-50 to-white">
+      <h1 className="text-3xl font-bold mb-6">🎮 Game Zone</h1>
+      <div className="grid md:grid-cols-3 gap-6">
+        {games.map(g => (
+          <Link
+            key={g.path}
+            href={g.path}
+            className="p-6 bg-white rounded-xl shadow hover:scale-105 transition"
+          >
+            <h2 className="text-xl font-semibold">{g.name}</h2>
+            <p className="text-gray-500">{g.desc}</p>
+          </Link>
+        ))}
+      </div>
+    </main>
+  )
+}
+
+2. Math Quiz Game (math-quiz.tsx)
+'use client'
+import { useState } from 'react'
+
+function randomQ() {
+  const a = Math.floor(Math.random() * 10)
+  const b = Math.floor(Math.random() * 10)
+  return { q: `${a} + ${b} = ?`, ans: a + b }
+}
+
+export default function MathQuiz() {
+  const [q, setQ] = useState(randomQ())
+  const [input, setInput] = useState('')
+  const [score, setScore] = useState(0)
+
+  function check() {
+    if (parseInt(input) === q.ans) {
+      setScore(score + 1)
+      alert('✅ Correct!')
+    } else {
+      alert('❌ Try again!')
+    }
+    setQ(randomQ())
+    setInput('')
+  }
+
+  return (
+    <div className="min-h-screen p-8 bg-yellow-50">
+      <h1 className="text-2xl font-bold mb-4">🧮 Math Quiz</h1>
+      <p className="mb-4 text-lg">{q.q}</p>
+      <input
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        className="border rounded p-2 mr-2"
+        type="number"
+      />
+      <button onClick={check} className="px-4 py-2 bg-blue-600 text-white rounded">
+        Submit
+      </button>
+      <p className="mt-4">Score: {score}</p>
+    </div>
+  )
+}
+
+3. Word Search Game (word-search.tsx)
+
+⚡ Simplified grid-based word search.
+
+'use client'
+import { useState } from 'react'
+
+const words = ['CAT', 'DOG', 'SUN']
+
+export default function WordSearch() {
+  const [found, setFound] = useState<string[]>([])
+
+  function checkWord(word: string) {
+    if (!found.includes(word)) {
+      setFound([...found, word])
+    }
+  }
+
+  return (
+    <div className="min-h-screen p-8 bg-green-50">
+      <h1 className="text-2xl font-bold mb-4">🔎 Word Search</h1>
+      <p>Words to find: {words.join(', ')}</p>
+
+      <div className="grid grid-cols-5 gap-2 my-6">
+        {['C', 'A', 'T', 'X', 'D', 'O', 'G', 'Y', 'S', 'U', 'N', 'Z'].map((letter, i) => (
+          <button
+            key={i}
+            onClick={() => checkWord(words.find(w => w.includes(letter)) || '')}
+            className="w-12 h-12 flex items-center justify-center border rounded bg-white hover:bg-blue-100"
+          >
+            {letter}
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-4">Found: {found.join(', ') || 'None yet'}</p>
+    </div>
+  )
+}
+
+4. Memory Match Game (memory-match.tsx)
+'use client'
+import { useState } from 'react'
+
+const cards = ['🍎', '🍎', '🍌', '🍌', '🍇', '🍇']
+
+export default function MemoryMatch() {
+  const [flipped, setFlipped] = useState<number[]>([])
+  const [matched, setMatched] = useState<number[]>([])
+
+  function flip(i: number) {
+    if (flipped.length === 2) return
+    setFlipped([...flipped, i])
+
+    if (flipped.length === 1) {
+      const [first] = flipped
+      if (cards[first] === cards[i]) {
+        setMatched([...matched, first, i])
+      }
+      setTimeout(() => setFlipped([]), 1000)
+    }
+  }
+
+  return (
+    <div className="min-h-screen p-8 bg-pink-50">
+      <h1 className="text-2xl font-bold mb-4">🧠 Memory Match</h1>
+      <div className="grid grid-cols-3 gap-4">
+        {cards.map((c, i) => (
+          <button
+            key={i}
+            onClick={() => flip(i)}
+            className="w-20 h-20 flex items-center justify-center border rounded bg-white text-3xl"
+          >
+            {flipped.includes(i) || matched.includes(i) ? c : '❓'}
+          </button>
+        ))}
+      </div>
+      {matched.length === cards.length && (
+        <p className="mt-6 font-bold text-green-600">🎉 You matched all!</p>
+      )}
+    </div>
+  )
+}
